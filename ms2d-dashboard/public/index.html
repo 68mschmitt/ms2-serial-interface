@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MS2D Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>MS2D Dashboard</h1>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">Disconnected</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Round Gauges -->
+    <section class="round-gauges">
+      <!-- RPM Gauge -->
+      <div class="round-gauge" data-gauge="rpm">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="rpm-round">---</div>
+          <div class="gauge-unit">RPM</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">0</span>
+          <span class="tick" style="--angle: -90deg">2k</span>
+          <span class="tick" style="--angle: -45deg">4k</span>
+          <span class="tick" style="--angle: 0deg">6k</span>
+          <span class="tick" style="--angle: 45deg">8k</span>
+        </div>
+      </div>
+
+      <!-- AFR Gauge -->
+      <div class="round-gauge" data-gauge="afr">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="afr-round">---</div>
+          <div class="gauge-unit">AFR</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">10</span>
+          <span class="tick" style="--angle: -67deg">12</span>
+          <span class="tick" style="--angle: 0deg">14.7</span>
+          <span class="tick" style="--angle: 67deg">17</span>
+          <span class="tick" style="--angle: 135deg">20</span>
+        </div>
+        <div class="afr-zones">
+          <span class="zone rich">Rich</span>
+          <span class="zone stoich">λ=1</span>
+          <span class="zone lean">Lean</span>
+        </div>
+      </div>
+
+      <!-- Coolant Gauge -->
+      <div class="round-gauge" data-gauge="coolant">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="coolant-round">---</div>
+          <div class="gauge-unit">°F</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">0</span>
+          <span class="tick" style="--angle: -67deg">60</span>
+          <span class="tick" style="--angle: 0deg">120</span>
+          <span class="tick" style="--angle: 67deg">180</span>
+          <span class="tick" style="--angle: 135deg">250</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bar Gauges -->
+    <section class="gauges">
+      <div class="gauge map">
+        <div class="gauge-value" id="map">---</div>
+        <div class="gauge-label">MAP (kPa)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="map-bar"></div>
+        </div>
+      </div>
+
+      <div class="gauge tps">
+        <div class="gauge-value" id="tps">---</div>
+        <div class="gauge-label">TPS (%)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="tps-bar"></div>
+        </div>
+      </div>
+
+      <div class="gauge advance-gauge">
+        <div class="gauge-value" id="advance">---</div>
+        <div class="gauge-label">Advance (°)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="advance-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT (°F)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">Battery (V)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW1 (ms)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">Accel Enrich (%)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE (%)</div>
+      </div>
+    </section>
+
+    <!-- Engine Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">Running</div>
+      <div class="flag" id="flag-cranking">Cranking</div>
+      <div class="flag" id="flag-warmup">Warmup</div>
+      <div class="flag" id="flag-accel">Accel</div>
+      <div class="flag" id="flag-decel">Decel</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
