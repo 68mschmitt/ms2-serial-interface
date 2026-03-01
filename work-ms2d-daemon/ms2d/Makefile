@@ -17,7 +17,7 @@ TEST_DIR := test
 # Source files
 DAEMON_SOURCES := $(wildcard $(SRC_DIR)/*.c)
 CJSON_SOURCES := $(wildcard $(VENDOR_DIR)/cjson/*.c)
-CLIENT_SOURCES := $(wildcard $(CLIENT_DIR)/*.c)
+CLIENT_SOURCES := $(CLIENT_DIR)/ms2_client.c
 TEST_SOURCES := $(wildcard $(TEST_DIR)/*.c)
 
 # Object files
@@ -31,7 +31,7 @@ DAEMON_TARGET := ms2d
 CLIENT_LIB := libms2client.a
 
 # Include paths
-INCLUDES := -I$(INCLUDE_DIR) -I$(VENDOR_DIR)
+INCLUDES := -I$(INCLUDE_DIR) -I$(VENDOR_DIR) -I$(CLIENT_DIR)
 
 # Default target
 .PHONY: all
@@ -74,6 +74,7 @@ install: $(DAEMON_TARGET) $(CLIENT_LIB)
 	install -m 755 $(DAEMON_TARGET) /usr/local/bin/
 	install -m 644 $(CLIENT_LIB) /usr/local/lib/
 	install -m 644 $(INCLUDE_DIR)/*.h /usr/local/include/ms2d/
+	install -m 644 $(CLIENT_DIR)/ms2_client.h /usr/local/include/ms2d/
 
 # Clean build artifacts
 .PHONY: clean

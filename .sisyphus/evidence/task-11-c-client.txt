@@ -1,0 +1,30 @@
+ERROR: Failed to get multiple values
+MS2D C Client Example
+Connecting to daemon at: /tmp/ms2d.sock
+
+Connected successfully.
+
+Daemon Status:
+  Connected to ECU: yes
+  ECU Signature: unknown
+
+Querying single field: rpm
+  rpm: 845.0
+
+Querying multiple fields: rpm, batteryVoltage, coolant
+Listing all available fields:
+  Total fields: 134
+  First 10 fields:
+    1. seconds
+    2. pulseWidth1
+    3. pulseWidth2
+    4. rpm
+    5. advance
+    6. squirt
+    7. firing1
+    8. firing2
+    9. sched1
+    10. inj1
+
+Disconnecting...
+Done.
