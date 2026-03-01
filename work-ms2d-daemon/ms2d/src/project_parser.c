@@ -49,7 +49,7 @@ static void parse_ecu_settings(const char *value, ms2d_config_t *config) {
 }
 
 /* Parse project.properties file */
-static ms2d_error_t parse_project_properties(const char *path, ms2d_config_t *config) {
+static ms2d_error_t parse_project_properties(const char *path, const char *project_dir, ms2d_config_t *config) {
     FILE *fp = fopen(path, "r");
     if (!fp) {
         return MS2D_ERROR_IO;
@@ -81,7 +81,10 @@ static ms2d_error_t parse_project_properties(const char *path, ms2d_config_t *co
         }
         /* Parse INI file */
         else if (strcmp(key, "ecuConfigFile") == 0) {
-            strncpy(config->ini_file, value, sizeof(config->ini_file) - 1);
+            /* Build absolute path relative to project directory */
+            char abs_path[512];
+            snprintf(abs_path, sizeof(abs_path), "%s/%s", project_dir, value);
+            strncpy(config->ini_file, abs_path, sizeof(config->ini_file) - 1);
             config->ini_file[sizeof(config->ini_file) - 1] = '\0';
         }
         /* Parse CAN ID */
@@ -257,7 +260,7 @@ ms2d_error_t ms2d_project_parse(const char *project_dir, ms2d_config_t *config) 
     }
     
     /* Parse project.properties */
-    ms2d_error_t err = parse_project_properties(properties_path, config);
+    ms2d_error_t err = parse_project_properties(properties_path, project_dir, config);
     if (err != MS2D_SUCCESS) {
         return err;
     }

@@ -223,6 +223,12 @@ int main(int argc, char *argv[])
         state.config.baud_rate = 115200; /* Default baud rate */
     }
     
+    /* Override port if specified on command line (useful for testing) */
+    if (port) {
+        strncpy(state.config.serial_port, port, sizeof(state.config.serial_port) - 1);
+        state.config.serial_port[sizeof(state.config.serial_port) - 1] = '\0';
+    }
+    
     /* Parse INI file */
     if (verbose) {
         fprintf(stderr, "Parsing INI file: %s\n", state.config.ini_file);

@@ -223,10 +223,12 @@ static cJSON *rpc_method_get_value(ms2d_state_t *state, const cJSON *params)
     }
 
     const cJSON *field_json = cJSON_GetObjectItemCaseSensitive((cJSON *)params, "field");
+    if (!field_json) {
+        field_json = cJSON_GetObjectItemCaseSensitive((cJSON *)params, "name");
+    }
     if (!cJSON_IsString(field_json) || !field_json->valuestring || field_json->valuestring[0] == '\0') {
         return NULL;
     }
-
     if (pthread_mutex_lock(&state->mutex) != 0) {
         return NULL;
     }
@@ -262,10 +264,12 @@ static cJSON *rpc_method_get_values(ms2d_state_t *state, const cJSON *params)
     }
 
     const cJSON *fields = cJSON_GetObjectItemCaseSensitive((cJSON *)params, "fields");
+    if (!fields) {
+        fields = cJSON_GetObjectItemCaseSensitive((cJSON *)params, "names");
+    }
     if (!cJSON_IsArray(fields)) {
         return NULL;
     }
-
     if (pthread_mutex_lock(&state->mutex) != 0) {
         return NULL;
     }
