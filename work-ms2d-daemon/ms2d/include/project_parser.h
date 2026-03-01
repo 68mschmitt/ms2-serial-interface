@@ -4,6 +4,18 @@
 #include "ms2d.h"
 
 /**
+ * Parse TunerStudio project directory configuration
+ * 
+ * Parses project.properties and custom.ini from a TunerStudio project directory
+ * to extract connection settings and custom field definitions.
+ * 
+ * @param project_dir Path to TunerStudio project directory
+ * @param config Pointer to config structure to populate
+ * @return MS2D_SUCCESS on success, error code otherwise
+ */
+ms2d_error_t ms2d_project_parse(const char *project_dir, ms2d_config_t *config);
+
+/**
  * Load project configuration from file
  * 
  * @param config_file Path to configuration file
