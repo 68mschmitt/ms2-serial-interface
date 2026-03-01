@@ -65,4 +65,36 @@ ms2d_error_t ms2d_rpc_get_all_fields(ms2d_state_t *state, ms2d_value_t **values,
 ms2d_error_t ms2d_rpc_send_can_command(ms2d_state_t *state, uint16_t can_id, 
                                         const uint8_t *data, size_t data_len);
 
+/**
+ * Initialize RPC server
+ * 
+ * @param state Daemon state
+ * @return MS2D_SUCCESS on success, error code otherwise
+ */
+ms2d_error_t ms2d_rpc_init(ms2d_state_t *state);
+
+/**
+ * Accept new RPC client connection (non-blocking)
+ * 
+ * @param state Daemon state
+ * @return MS2D_SUCCESS on success, MS2D_ERROR_TIMEOUT if no client, error code otherwise
+ */
+ms2d_error_t ms2d_rpc_accept(ms2d_state_t *state);
+
+/**
+ * Handle RPC requests from client
+ * 
+ * @param state Daemon state
+ * @param client_fd Client file descriptor
+ * @return MS2D_SUCCESS on success, error code otherwise
+ */
+ms2d_error_t ms2d_rpc_handle(ms2d_state_t *state, int client_fd);
+
+/**
+ * Shutdown RPC server and clean up resources
+ * 
+ * @param state Daemon state
+ */
+void ms2d_rpc_shutdown(ms2d_state_t *state);
+
 #endif /* MS2D_RPC_SERVER_H */

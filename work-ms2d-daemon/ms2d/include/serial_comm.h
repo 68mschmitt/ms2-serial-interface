@@ -6,19 +6,18 @@
 /**
  * Open serial port connection
  * 
- * @param port Serial port path (e.g., /dev/ttyUSB0)
- * @param baud_rate Baud rate (e.g., 115200)
- * @return File descriptor on success, negative error code on failure
+ * @param state Daemon state (config.serial_port and config.baud_rate must be set)
+ * @return MS2D_SUCCESS on success, error code otherwise
  */
-int ms2d_serial_open(const char *port, uint32_t baud_rate);
+ms2d_error_t ms2d_serial_open(ms2d_state_t *state);
 
 /**
  * Close serial port connection
  * 
- * @param fd File descriptor
+ * @param state Daemon state
  * @return MS2D_SUCCESS on success, error code otherwise
  */
-ms2d_error_t ms2d_serial_close(int fd);
+ms2d_error_t ms2d_serial_close(ms2d_state_t *state);
 
 /**
  * Read data from serial port
@@ -57,5 +56,13 @@ ms2d_error_t ms2d_serial_flush(int fd);
  * @return MS2D_SUCCESS on success, error code otherwise
  */
 ms2d_error_t ms2d_serial_set_params(int fd, uint32_t baud_rate);
+
+/**
+ * Poll ECU for OUTPC data
+ * 
+ * @param state Daemon state
+ * @return MS2D_SUCCESS on success, error code otherwise
+ */
+ms2d_error_t ms2d_serial_poll_outpc(ms2d_state_t *state);
 
 #endif /* MS2D_SERIAL_COMM_H */
