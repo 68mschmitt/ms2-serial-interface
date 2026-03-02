@@ -7,6 +7,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MS2D_DIR="$SCRIPT_DIR/work-ms2d-daemon/ms2d"
 DASHBOARD_DIR="$SCRIPT_DIR/ms2d-dashboard"
 
+# Default port (can be overridden with --port)
+PORT="/dev/ttyUSB0"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --port)
+            PORT="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Cleanup function
 cleanup() {
     echo ""
@@ -38,7 +55,7 @@ cd "$MS2D_DIR"
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting ms2d..."
-    ./ms2d --port /dev/ttyUSB0 --project "$SCRIPT_DIR/projectCfg"
+    ./ms2d --port "$PORT" --project "$SCRIPT_DIR/projectCfg"
     
     EXIT_CODE=$?
     echo "[$(date '+%H:%M:%S')] ms2d exited with code $EXIT_CODE"
