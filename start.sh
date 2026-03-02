@@ -38,7 +38,7 @@ cd "$MS2D_DIR"
 
 while true; do
     echo "[$(date '+%H:%M:%S')] Starting ms2d..."
-    ./ms2d --port /tmp/ecuSim --project "$SCRIPT_DIR/work-ms2d-daemon/projectCfg"
+    ./ms2d --port /dev/ttyUSB0 --project "$SCRIPT_DIR/projectCfg"
     
     EXIT_CODE=$?
     echo "[$(date '+%H:%M:%S')] ms2d exited with code $EXIT_CODE"
