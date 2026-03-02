@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>MS2D ULTIMATE // ALL SYSTEMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #05080a;
+      --bg-card: #0a1015;
+      --bg-card-alt: #0d1520;
+      --accent-cyan: #00ffff;
+      --accent-green: #00ff88;
+      --accent-pink: #ff0080;
+      --accent-orange: #ff6600;
+      --accent-yellow: #ffcc00;
+      --accent-red: #ff0040;
+      --accent-blue: #0088ff;
+      --text: #e0e0e0;
+      --text-dim: #556;
+      --border: rgba(0, 255, 255, 0.2);
+    }
+
+    html, body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Redline vignette effect */
+    #redline-vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.1s;
+      box-shadow: inset 0 0 100px 20px rgba(255, 0, 64, 0.6);
+    }
+
+    #redline-vignette.active {
+      opacity: 1;
+      animation: vignetteFlash 0.15s ease-in-out infinite;
+    }
+
+    @keyframes vignetteFlash {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Warning styles */
+    body.warning-warning {
+      animation: warningFlash 0.3s;
+    }
+
+    body.warning-critical {
+      animation: criticalFlash 0.2s;
+    }
+
+    @keyframes warningFlash {
+      0%, 100% { box-shadow: inset 0 0 50px rgba(255, 200, 0, 0); }
+      50% { box-shadow: inset 0 0 100px rgba(255, 200, 0, 0.5); }
+    }
+
+    @keyframes criticalFlash {
+      0%, 100% { box-shadow: inset 0 0 50px rgba(255, 0, 0, 0); }
+      50% { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.7); }
+    }
+
+    /* Warning toasts */
+    #warning-toasts {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .warning-toast {
+      padding: 10px 20px;
+      background: rgba(255, 100, 0, 0.9);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 4px;
+      animation: toastIn 0.3s, toastOut 0.3s 2.7s;
+    }
+
+    .warning-toast.critical {
+      background: rgba(255, 0, 0, 0.95);
+      animation: toastIn 0.3s, criticalPulse 0.5s 0.3s infinite, toastOut 0.3s 2.7s;
+    }
+
+    @keyframes toastIn {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      to { transform: translateX(100px); opacity: 0; }
+    }
+
+    @keyframes criticalPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Display modes */
+    body.mode-hud {
+      transform: scaleX(-1);
+      background: #000;
+    }
+
+    body.mode-hud * {
+      color: var(--accent-green) !important;
+    }
+
+    body.mode-night {
+      --accent-cyan: #ff3333;
+      --accent-green: #ff4444;
+      --accent-pink: #ff2222;
+      --text: #ff6666;
+      filter: saturate(0.3) brightness(0.7);
+    }
+
+    body.mode-night::before {
+      background: none;
+    }
+
+    /* ==================== NAVIGATION ==================== */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px;
+      background: linear-gradient(180deg, rgba(5, 8, 10, 0.98), rgba(5, 8, 10, 0.9));
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      padding: 6px 12px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    nav.theme-nav a:hover {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    nav.theme-nav a.active {
+      color: var(--accent-pink);
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 15px rgba(255, 0, 128, 0.3);
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 5px;
+      margin-left: auto;
+    }
+
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 5px 10px;
+      font-size: 0.65rem;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .nav-btn.recording {
+      background: var(--accent-red);
+      color: #fff;
+      animation: recordPulse 1s infinite;
+    }
+
+    @keyframes recordPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* ==================== SHIFT LIGHTS BAR ==================== */
+    .shift-lights-bar {
+      position: fixed;
+      top: 45px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      display: flex;
+      gap: 2px;
+      padding: 0 10px;
+      background: var(--bg-dark);
+      z-index: 99;
+    }
+
+    .shift-light {
+      flex: 1;
+      height: 100%;
+      background: #1a1a1a;
+      border-radius: 2px;
+      transition: all 0.05s;
+    }
+
+    .shift-light.active.green {
+      background: #00ff00;
+      box-shadow: 0 0 10px #00ff00;
+    }
+
+    .shift-light.active.yellow {
+      background: #ffff00;
+      box-shadow: 0 0 10px #ffff00;
+    }
+
+    .shift-light.active.red {
+      background: #ff0000;
+      box-shadow: 0 0 15px #ff0000;
+    }
+
+    .shift-light.flash {
+      animation: shiftFlash 0.1s infinite;
+    }
+
+    @keyframes shiftFlash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ==================== HEADER ==================== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      margin-top: 53px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.3));
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+
+    .status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-red);
+    }
+
+    .status.connected .dot {
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    /* Peak values display */
+    .peaks-bar {
+      display: flex;
+      gap: 15px;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+
+    .peak-item {
+      display: flex;
+      gap: 5px;
+    }
+
+    .peak-item .peak-value {
+      color: var(--accent-yellow);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ==================== MAIN LAYOUT ==================== */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 10px;
+      padding: 10px;
+      min-height: calc(100vh - 120px);
+    }
+
+    .main-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ==================== PANEL STYLES ==================== */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      position: relative;
+    }
+
+    .panel-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ==================== PRIMARY GAUGES ==================== */
+    .primary-gauges {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .round-gauge {
+      position: relative;
+      width: 180px;
+      height: 180px;
+    }
+
+    .round-gauge svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-135deg);
+    }
+
+    .round-gauge circle {
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .round-gauge .gauge-bg {
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 10;
+    }
+
+    .round-gauge .gauge-arc {
+      stroke: var(--accent-cyan);
+      stroke-width: 8;
+      stroke-dasharray: 401;
+      stroke-dashoffset: 401;
+      filter: drop-shadow(0 0 8px var(--accent-cyan));
+      transition: stroke-dashoffset 0.1s ease-out;
+    }
+
+    .round-gauge .gauge-arc.afr-arc {
+      stroke: var(--accent-pink);
+      filter: drop-shadow(0 0 8px var(--accent-pink));
+    }
+
+    .round-gauge .gauge-arc.coolant-arc {
+      stroke: var(--accent-blue);
+      filter: drop-shadow(0 0 8px var(--accent-blue));
+    }
+
+    .round-gauge .gauge-center {
+      fill: var(--bg-card);
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .round-gauge .gauge-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .round-gauge .gauge-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 20px var(--accent-cyan);
+      line-height: 1;
+    }
+
+    .round-gauge[data-gauge="afr"] .gauge-value {
+      color: var(--accent-pink);
+      text-shadow: 0 0 20px var(--accent-pink);
+    }
+
+    .round-gauge[data-gauge="coolant"] .gauge-value {
+      color: var(--accent-blue);
+      text-shadow: 0 0 20px var(--accent-blue);
+    }
+
+    .round-gauge .gauge-unit {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    .round-gauge .gauge-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .round-gauge .tick {
+      position: absolute;
+      font-size: 0.5rem;
+      color: var(--text-dim);
+      top: 50%;
+      left: 50%;
+      transform-origin: center;
+      transform: rotate(var(--angle)) translateY(-85px) rotate(calc(-1 * var(--angle)));
+    }
+
+    /* Gauge color states */
+    .gauge-arc.redline { stroke: var(--accent-red) !important; filter: drop-shadow(0 0 15px var(--accent-red)) !important; }
+    .gauge-arc.rich { stroke: var(--accent-orange) !important; }
+    .gauge-arc.stoich { stroke: var(--accent-green) !important; }
+    .gauge-arc.lean { stroke: var(--accent-blue) !important; }
+    .gauge-arc.cold { stroke: #00aaff !important; }
+    .gauge-arc.normal { stroke: var(--accent-green) !important; }
+    .gauge-arc.hot { stroke: var(--accent-orange) !important; }
+    .gauge-arc.danger { stroke: var(--accent-red) !important; }
+
+    /* ==================== BAR GAUGES ==================== */
+    .bar-gauges {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .gauge {
+      background: var(--bg-card-alt);
+      border-radius: 4px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .gauge .gauge-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent-green);
+      text-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .gauge.tps .gauge-value { color: var(--accent-yellow); text-shadow: 0 0 10px var(--accent-yellow); }
+    .gauge.advance-gauge .gauge-value { color: var(--accent-blue); text-shadow: 0 0 10px var(--accent-blue); }
+
+    .gauge-label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin: 5px 0;
+    }
+
+    .gauge-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.1s ease-out;
+    }
+
+    .gauge.map .gauge-fill { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .gauge.tps .gauge-fill { background: var(--accent-yellow); box-shadow: 0 0 8px var(--accent-yellow); }
+    .gauge.advance-gauge .gauge-fill { background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue); }
+
+    /* ==================== VALUE CARDS ==================== */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .value-card {
+      background: var(--bg-card-alt);
+      border-radius: 4px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .value-card .value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+
+    .value-card .label {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    /* ==================== FLAGS ==================== */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+      opacity: 0.4;
+      transition: all 0.2s;
+    }
+
+    .flag.active {
+      opacity: 1;
+      background: var(--accent-green);
+      color: #000;
+      border-color: var(--accent-green);
+      box-shadow: 0 0 15px var(--accent-green);
+    }
+
+    /* ==================== CHARTS ==================== */
+    .chart-container {
+      background: var(--bg-card-alt);
+      border-radius: 4px;
+      padding: 8px;
+    }
+
+    .chart-container canvas {
+      width: 100%;
+      height: 80px;
+      display: block;
+    }
+
+    .chart-label {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+
+    /* ==================== DRAG RACE PANEL ==================== */
+    .drag-race-panel {
+      text-align: center;
+    }
+
+    .christmas-tree {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+
+    .tree-column {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .tree-light {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 2px solid #333;
+    }
+
+    .tree-light.active {
+      border-color: currentColor;
+    }
+
+    .tree-light.amber.active {
+      background: var(--accent-yellow);
+      box-shadow: 0 0 15px var(--accent-yellow);
+    }
+
+    .tree-light.green.active {
+      background: var(--accent-green);
+      box-shadow: 0 0 20px var(--accent-green);
+    }
+
+    .tree-light.red.active {
+      background: var(--accent-red);
+      box-shadow: 0 0 15px var(--accent-red);
+    }
+
+    .drag-display {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .drag-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      color: var(--accent-green);
+      text-shadow: 0 0 15px var(--accent-green);
+    }
+
+    .drag-label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+    }
+
+    #drag-splits {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: left;
+    }
+
+    .drag-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .drag-btn {
+      background: var(--accent-cyan);
+      color: #000;
+      border: none;
+      padding: 8px 20px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .drag-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--accent-cyan);
+    }
+
+    .drag-btn.reset {
+      background: var(--bg-card-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ==================== G-FORCE METER ==================== */
+    .gforce-meter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gforce-circle {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      background: var(--bg-card-alt);
+    }
+
+    .gforce-circle::before,
+    .gforce-circle::after {
+      content: '';
+      position: absolute;
+      background: var(--border);
+    }
+
+    .gforce-circle::before {
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+    }
+
+    .gforce-circle::after {
+      left: 50%;
+      top: 10%;
+      bottom: 10%;
+      width: 1px;
+    }
+
+    #gforce-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: var(--accent-pink);
+      border-radius: 50%;
+      margin: -6px 0 0 -6px;
+      box-shadow: 0 0 15px var(--accent-pink);
+      transition: transform 0.05s;
+    }
+
+    .gforce-trail {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #gforce-trail {
+      fill: none;
+      stroke: rgba(255, 0, 128, 0.3);
+      stroke-width: 2;
+    }
+
+    .gforce-values {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    .gforce-values .g-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent-pink);
+    }
+
+    /* ==================== LAP TIMER ==================== */
+    .lap-timer-panel {
+      text-align: center;
+    }
+
+    #lap-timer {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 20px var(--accent-cyan);
+      margin: 10px 0;
+    }
+
+    .lap-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .lap-btn {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 15px;
+      font-family: inherit;
+      font-size: 0.7rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .lap-btn:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .lap-btn.primary {
+      background: var(--accent-cyan);
+      color: #000;
+      border-color: var(--accent-cyan);
+    }
+
+    #lap-list {
+      font-size: 0.7rem;
+      text-align: left;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    #lap-list .best {
+      color: var(--accent-green);
+    }
+
+    .best-lap-display {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 10px;
+    }
+
+    .best-lap-display #best-lap {
+      color: var(--accent-green);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ==================== WARNING PANEL ==================== */
+    #warning-panel {
+      display: none;
+      background: rgba(255, 0, 0, 0.2);
+      border: 2px solid var(--accent-red);
+      border-radius: 4px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    #warning-panel.active {
+      display: block;
+      animation: warningPanelPulse 0.5s infinite;
+    }
+
+    @keyframes warningPanelPulse {
+      0%, 100% { border-color: var(--accent-red); }
+      50% { border-color: var(--accent-yellow); }
+    }
+
+    .warning-item {
+      color: var(--accent-red);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+
+    /* ==================== FOOTER ==================== */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 15px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .primary-gauges {
+        gap: 10px;
+      }
+
+      .round-gauge {
+        width: 140px;
+        height: 140px;
+      }
+
+      .round-gauge .gauge-value {
+        font-size: 1.5rem;
+      }
+
+      .bar-gauges {
+        grid-template-columns: 1fr;
+      }
+
+      .values {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      nav.theme-nav a {
+        padding: 4px 8px;
+        font-size: 0.6rem;
+      }
+
+      .nav-controls {
+        display: none;
+      }
+
+      .side-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .round-gauge {
+        width: 120px;
+        height: 120px;
+      }
+
+      .round-gauge .gauge-value {
+        font-size: 1.2rem;
+      }
+
+      .round-gauge .tick {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Redline vignette effect -->
+  <div id="redline-vignette"></div>
+
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf">F&F</a>
+    <a href="/ultimate" class="active">ULTIMATE</a>
+    
+    <div class="nav-controls">
+      <button class="nav-btn" id="log-btn">⏺ LOG</button>
+      <button class="nav-btn" id="export-btn">📥 CSV</button>
+      <button class="nav-btn" id="mode-btn">🖥 MODE</button>
+      <button class="nav-btn" id="fullscreen-btn">⛶</button>
+    </div>
+  </nav>
+
+  <!-- Shift Lights Bar -->
+  <div class="shift-lights-bar">
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+    <div class="shift-light"></div>
+  </div>
+
+  <header>
+    <h1>MS2D ULTIMATE</h1>
+    
+    <div class="peaks-bar">
+      <div class="peak-item">
+        <span>PEAK RPM:</span>
+        <span class="peak-value" id="peak-rpm">0</span>
+      </div>
+      <div class="peak-item">
+        <span>PEAK MAP:</span>
+        <span class="peak-value" id="peak-map">0</span>
+      </div>
+      <div class="peak-item">
+        <span>AFR RANGE:</span>
+        <span class="peak-value" id="peak-afr">--</span>
+      </div>
+      <button class="nav-btn" id="reset-peaks-btn" style="padding: 2px 8px; font-size: 0.6rem;">RESET</button>
+    </div>
+    
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="main-panel">
+      <!-- Warning Panel -->
+      <div id="warning-panel"></div>
+
+      <!-- Primary Gauges -->
+      <div class="panel">
+        <div class="panel-title">PRIMARY SYSTEMS</div>
+        <div class="primary-gauges">
+          <!-- RPM Gauge -->
+          <div class="round-gauge" data-gauge="rpm">
+            <svg viewBox="0 0 200 200">
+              <circle class="gauge-bg" cx="100" cy="100" r="85" />
+              <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+              <circle class="gauge-center" cx="100" cy="100" r="55" />
+            </svg>
+            <div class="gauge-content">
+              <div class="gauge-value" id="rpm-round">---</div>
+              <div class="gauge-unit">RPM</div>
+            </div>
+            <div class="gauge-ticks">
+              <span class="tick" style="--angle: -135deg">0</span>
+              <span class="tick" style="--angle: -90deg">2k</span>
+              <span class="tick" style="--angle: -45deg">4k</span>
+              <span class="tick" style="--angle: 0deg">6k</span>
+              <span class="tick" style="--angle: 45deg">8k</span>
+            </div>
+          </div>
+
+          <!-- AFR Gauge -->
+          <div class="round-gauge" data-gauge="afr">
+            <svg viewBox="0 0 200 200">
+              <circle class="gauge-bg" cx="100" cy="100" r="85" />
+              <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+              <circle class="gauge-center" cx="100" cy="100" r="55" />
+            </svg>
+            <div class="gauge-content">
+              <div class="gauge-value" id="afr-round">---</div>
+              <div class="gauge-unit">AFR</div>
+            </div>
+            <div class="gauge-ticks">
+              <span class="tick" style="--angle: -135deg">10</span>
+              <span class="tick" style="--angle: -45deg">13</span>
+              <span class="tick" style="--angle: 45deg">17</span>
+              <span class="tick" style="--angle: 135deg">20</span>
+            </div>
+          </div>
+
+          <!-- Coolant Gauge -->
+          <div class="round-gauge" data-gauge="coolant">
+            <svg viewBox="0 0 200 200">
+              <circle class="gauge-bg" cx="100" cy="100" r="85" />
+              <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+              <circle class="gauge-center" cx="100" cy="100" r="55" />
+            </svg>
+            <div class="gauge-content">
+              <div class="gauge-value" id="coolant-round">---</div>
+              <div class="gauge-unit">°F</div>
+            </div>
+            <div class="gauge-ticks">
+              <span class="tick" style="--angle: -135deg">0</span>
+              <span class="tick" style="--angle: -45deg">100</span>
+              <span class="tick" style="--angle: 45deg">200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bar Gauges -->
+      <div class="panel">
+        <div class="bar-gauges">
+          <div class="gauge map">
+            <div class="gauge-value" id="map">---</div>
+            <div class="gauge-label">MAP (kPa)</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" id="map-bar"></div>
+            </div>
+          </div>
+
+          <div class="gauge tps">
+            <div class="gauge-value" id="tps">---</div>
+            <div class="gauge-label">TPS (%)</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" id="tps-bar"></div>
+            </div>
+          </div>
+
+          <div class="gauge advance-gauge">
+            <div class="gauge-value" id="advance">---</div>
+            <div class="gauge-label">TIMING (°)</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" id="advance-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Values & Flags -->
+      <div class="panel">
+        <div class="values">
+          <div class="value-card">
+            <div class="value" id="mat">---</div>
+            <div class="label">IAT °F</div>
+          </div>
+          <div class="value-card">
+            <div class="value" id="batteryVoltage">---</div>
+            <div class="label">VOLTS</div>
+          </div>
+          <div class="value-card">
+            <div class="value" id="pulseWidth1">---</div>
+            <div class="label">PW ms</div>
+          </div>
+          <div class="value-card">
+            <div class="value" id="dutyCycle1">---</div>
+            <div class="label">ACCEL %</div>
+          </div>
+          <div class="value-card">
+            <div class="value" id="veCurr1">---</div>
+            <div class="label">VE %</div>
+          </div>
+        </div>
+
+        <div class="flags" style="margin-top: 10px;">
+          <div class="flag" id="flag-running">RUNNING</div>
+          <div class="flag" id="flag-cranking">CRANKING</div>
+          <div class="flag" id="flag-warmup">WARMUP</div>
+          <div class="flag" id="flag-accel">ACCEL</div>
+          <div class="flag" id="flag-decel">DECEL</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="panel">
+        <div class="panel-title">DATA VISUALIZATION</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <div class="chart-container">
+            <div class="chart-label">RPM HISTORY</div>
+            <canvas id="rpm-ribbon" width="200" height="80"></canvas>
+          </div>
+          <div class="chart-container">
+            <div class="chart-label">AFR HISTOGRAM</div>
+            <canvas id="afr-histogram" width="200" height="80"></canvas>
+          </div>
+          <div class="chart-container">
+            <div class="chart-label">LOAD HEATMAP</div>
+            <canvas id="load-heatmap" width="200" height="80"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <!-- Drag Race -->
+      <div class="panel drag-race-panel">
+        <div class="panel-title">DRAG RACE</div>
+        <div class="christmas-tree">
+          <div class="tree-column">
+            <div class="tree-light" id="tree-prestage"></div>
+            <div class="tree-light" id="tree-stage"></div>
+            <div class="tree-light amber" id="tree-amber1"></div>
+            <div class="tree-light amber" id="tree-amber2"></div>
+            <div class="tree-light amber" id="tree-amber3"></div>
+            <div class="tree-light green" id="tree-green"></div>
+            <div class="tree-light red" id="tree-red"></div>
+          </div>
+        </div>
+        <div class="drag-display">
+          <div>
+            <div class="drag-value" id="drag-et">0.000</div>
+            <div class="drag-label">E.T. (sec)</div>
+          </div>
+          <div>
+            <div class="drag-value" id="drag-reaction" style="color: var(--accent-yellow);">0.000</div>
+            <div class="drag-label">REACTION</div>
+          </div>
+        </div>
+        <div id="drag-splits"></div>
+        <div class="drag-buttons">
+          <button class="drag-btn" id="drag-stage-btn">STAGE</button>
+          <button class="drag-btn reset" id="drag-reset-btn">RESET</button>
+        </div>
+      </div>
+
+      <!-- Lap Timer -->
+      <div class="panel lap-timer-panel">
+        <div class="panel-title">LAP TIMER</div>
+        <div id="lap-timer">0.000</div>
+        <div class="lap-buttons">
+          <button class="lap-btn primary" id="lap-start-btn">START</button>
+          <button class="lap-btn" id="lap-btn">LAP</button>
+          <button class="lap-btn" id="lap-stop-btn">STOP</button>
+          <button class="lap-btn" id="lap-reset-btn">RESET</button>
+        </div>
+        <div id="lap-list"></div>
+        <div class="best-lap-display">
+          BEST: <span id="best-lap">--</span>
+        </div>
+      </div>
+
+      <!-- G-Force Meter -->
+      <div class="panel">
+        <div class="panel-title">G-FORCE</div>
+        <div class="gforce-meter">
+          <div class="gforce-circle">
+            <svg class="gforce-trail" viewBox="0 0 100 100">
+              <polyline id="gforce-trail" points="50,50"/>
+            </svg>
+            <div id="gforce-dot"></div>
+          </div>
+          <div class="gforce-values">
+            <div>
+              <div class="g-value" id="gforce-x">0.00</div>
+              <div class="drag-label">LATERAL</div>
+            </div>
+            <div>
+              <div class="g-value" id="gforce-y">0.00</div>
+              <div class="drag-label">ACCEL</div>
+            </div>
+            <div>
+              <div class="g-value" id="gforce-peak">0.00</div>
+              <div class="drag-label">PEAK</div>
+            </div>
+          </div>
+          <button class="lap-btn" id="gforce-reset-btn" style="margin-top: 10px;">RESET PEAK</button>
+          <button class="lap-btn" id="gforce-enable" style="margin-top: 5px;">ENABLE MOTION</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span>L=Log E=Export R=Reset S=Stage SPACE=Lap M=Mode F=Fullscreen</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

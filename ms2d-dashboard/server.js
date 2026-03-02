@@ -17,8 +17,10 @@ const SOCKET_PATH = process.argv[2] || '/tmp/ms2d.sock';
 
 let client = null;
 let connected = false;
-
+let lastErrorLog = 0;  // Rate limit error logging
+const ERROR_LOG_INTERVAL = 5000;  // Only log errors every 5 seconds
 // Connect to daemon
+let wasConnected = false;  // Track for logging
 async function connectClient() {
   if (client && connected) return true;
   
@@ -26,10 +28,19 @@ async function connectClient() {
     client = new MS2Client(SOCKET_PATH);
     await client.connect();
     connected = true;
-    console.log(`Connected to ms2d daemon at ${SOCKET_PATH}`);
+    // Only log on first connection or reconnection
+    if (!wasConnected) {
+      console.log(`Connected to ms2d daemon at ${SOCKET_PATH}`);
+      wasConnected = true;
+    }
     return true;
   } catch (err) {
-    console.error('Failed to connect:', err.message);
+    // Only log connection failures once every 5 seconds
+    const now = Date.now();
+    if (now - lastErrorLog > ERROR_LOG_INTERVAL) {
+      console.error('Waiting for daemon...');
+      lastErrorLog = now;
+    }
     connected = false;
     return false;
   }
@@ -57,6 +68,7 @@ const THEME_ROUTES = {
   '/drag': 'drag.html',
   '/ricer': 'ricer.html',
   '/fnf': 'fnf.html',
+  '/ultimate': 'ultimate.html',
 };
 
 // Serve static files from public/
@@ -123,7 +135,12 @@ async function handleAPI(req, res) {
     res.writeHead(200);
     res.end(JSON.stringify(result));
   } catch (err) {
-    console.error('API error:', err.message);
+    // Rate-limit error logging to reduce spam
+    const now = Date.now();
+    if (now - lastErrorLog > ERROR_LOG_INTERVAL) {
+      console.error('API error:', err.message);
+      lastErrorLog = now;
+    }
     connected = false;
     res.writeHead(500);
     res.end(JSON.stringify({ error: err.message }));

@@ -7,21 +7,37 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ECU_SIM_DIR="$SCRIPT_DIR/ecuSim"
 SIMULATED_PORT="/tmp/ecuSim"
 
-# Cleanup function
+# Track all child PIDs
+ECU_SIM_PID=""
+START_SH_PID=""
+
+# Cleanup function - kill all children
 cleanup() {
     echo ""
     echo "Shutting down demo..."
     
+    # Kill start.sh and its children (dashboard, daemon)
+    if [[ -n "$START_SH_PID" ]]; then
+        # Kill the process group to get all children
+        kill -TERM -"$START_SH_PID" 2>/dev/null
+        wait "$START_SH_PID" 2>/dev/null
+    fi
+    
     # Kill ECU simulator
     if [[ -n "$ECU_SIM_PID" ]]; then
-        kill "$ECU_SIM_PID" 2>/dev/null
+        kill -TERM "$ECU_SIM_PID" 2>/dev/null
         wait "$ECU_SIM_PID" 2>/dev/null
     fi
     
+    # Clean up the symlink
+    rm -f "$SIMULATED_PORT" 2>/dev/null
+    
+    echo "Demo stopped."
     exit 0
 }
 
-trap cleanup SIGINT SIGTERM
+# Trap signals for cleanup
+trap cleanup SIGINT SIGTERM EXIT
 
 # Start ECU simulator with pages option
 echo "Starting ECU Simulator with pages..."
@@ -42,12 +58,15 @@ done
 
 if [[ ! -e "$SIMULATED_PORT" ]]; then
     echo "Error: Simulator failed to create $SIMULATED_PORT"
-    cleanup
     exit 1
 fi
 
 echo ""
 
-# Run start.sh with the simulated port
+# Run start.sh in background (not exec) so we can clean up
 cd "$SCRIPT_DIR"
-exec ./start.sh --port "$SIMULATED_PORT"
+setsid ./start.sh --port "$SIMULATED_PORT" &
+START_SH_PID=$!
+
+# Wait for start.sh to finish (or be killed)
+wait "$START_SH_PID" 2>/dev/null
