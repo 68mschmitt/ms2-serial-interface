@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜走族 JDM Night Racer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #0d0d15;
+      --neon-cyan: #00ffff;
+      --neon-pink: #ff00ff;
+      --neon-blue: #00f0ff;
+      --hot-pink: #ff1493;
+      --text: #eaeaea;
+      --text-dim: #666;
+    }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 255, 0.03) 2px,
+        rgba(0, 255, 255, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Animated grid background */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+      animation: gridPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Theme Navigation */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(10, 10, 15, 0.9) 100%);
+      border-bottom: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 0.5rem 1rem;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    nav.theme-nav a:hover {
+      color: var(--neon-cyan);
+      border-color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    nav.theme-nav a.active {
+      color: var(--neon-pink);
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 15px rgba(255, 0, 255, 0.5), inset 0 0 15px rgba(255, 0, 255, 0.1);
+      text-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      margin-top: 50px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.05), transparent);
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+    }
+
+    header h1::after {
+      content: ' 夜走族';
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+
+    .status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff0040;
+      box-shadow: 0 0 10px #ff0040;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .status.connected .dot {
+      background: var(--neon-cyan);
+      box-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* Main Content */
+    main {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Round Gauges Section */
+    .round-gauges {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .round-gauge {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.4));
+    }
+
+    .round-gauge svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-135deg);
+    }
+
+    .round-gauge circle {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+    }
+
+    .round-gauge .gauge-bg {
+      stroke: rgba(0, 255, 255, 0.15);
+    }
+
+    .round-gauge .gauge-arc {
+      stroke: var(--neon-cyan);
+      stroke-dasharray: 401;
+      stroke-dashoffset: 401;
+      transition: stroke-dashoffset 0.15s ease-out;
+      filter: drop-shadow(0 0 8px var(--neon-cyan));
+    }
+
+    .round-gauge .gauge-arc.afr-arc {
+      stroke: var(--neon-pink);
+      filter: drop-shadow(0 0 8px var(--neon-pink));
+    }
+
+    .round-gauge .gauge-arc.coolant-arc {
+      stroke: var(--neon-blue);
+      filter: drop-shadow(0 0 8px var(--neon-blue));
+    }
+
+    .round-gauge .gauge-center {
+      fill: var(--bg-card);
+      stroke: rgba(0, 255, 255, 0.3);
+      stroke-width: 2;
+    }
+
+    .round-gauge .gauge-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .round-gauge .gauge-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+      line-height: 1;
+    }
+
+    .round-gauge[data-gauge="afr"] .gauge-value {
+      color: var(--neon-pink);
+      text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink);
+    }
+
+    .round-gauge[data-gauge="coolant"] .gauge-value {
+      color: var(--neon-blue);
+      text-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue);
+    }
+
+    .round-gauge .gauge-unit {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 0.25rem;
+    }
+
+    .round-gauge .gauge-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .round-gauge .tick {
+      position: absolute;
+      font-size: 0.55rem;
+      color: rgba(0, 255, 255, 0.6);
+      top: 50%;
+      left: 50%;
+      transform-origin: center;
+      transform: rotate(var(--angle)) translateY(-92px) rotate(calc(-1 * var(--angle)));
+    }
+
+    /* AFR zones */
+    .afr-zones {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      font-size: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .afr-zones .zone {
+      padding: 2px 6px;
+      border-radius: 2px;
+      opacity: 0.7;
+    }
+
+    .afr-zones .rich { background: #ff6b00; color: #000; }
+    .afr-zones .stoich { background: var(--neon-pink); color: #000; }
+    .afr-zones .lean { background: var(--neon-blue); color: #000; }
+
+    /* Color states */
+    .gauge-arc.redline { stroke: #ff0040 !important; filter: drop-shadow(0 0 15px #ff0040) !important; }
+    .gauge-arc.rich { stroke: #ff6b00 !important; }
+    .gauge-arc.stoich { stroke: var(--neon-pink) !important; }
+    .gauge-arc.lean { stroke: var(--neon-blue) !important; }
+    .gauge-arc.cold { stroke: #00bfff !important; }
+    .gauge-arc.normal { stroke: var(--neon-cyan) !important; }
+    .gauge-arc.hot { stroke: #ff6b00 !important; }
+    .gauge-arc.danger { stroke: #ff0040 !important; }
+
+    /* Bar Gauges */
+    .gauges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .gauge {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gauge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      animation: scanline 2s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .gauge .gauge-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 15px var(--neon-cyan);
+    }
+
+    .gauge.tps .gauge-value { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+    .gauge.advance-gauge .gauge-value { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
+
+    .gauge-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin: 0.4rem 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .gauge-bar {
+      height: 6px;
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .gauge.map .gauge-fill { background: var(--neon-cyan); }
+    .gauge.tps .gauge-fill { background: var(--neon-pink); }
+    .gauge.advance-gauge .gauge-fill { background: var(--neon-blue); }
+
+    /* Value Cards */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 1rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 0, 255, 0.2);
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .value-card:hover {
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+    }
+
+    .value-card .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .value-card .label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Status Flags */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+    }
+
+    .flag.active {
+      opacity: 1;
+      background: var(--neon-cyan);
+      color: #000;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+      animation: flagGlow 1s ease-in-out infinite;
+    }
+
+    @keyframes flagGlow {
+      0%, 100% { box-shadow: 0 0 20px var(--neon-cyan); }
+      50% { box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--neon-cyan); }
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 2rem;
+      background: var(--bg-card);
+      border-top: 1px solid rgba(0, 255, 255, 0.2);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    /* Japanese decorative text */
+    .jp-decor {
+      position: fixed;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: rgba(255, 0, 255, 0.1);
+      font-size: 3rem;
+      writing-mode: vertical-rl;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .jp-decor.left { left: 10px; top: 100px; }
+    .jp-decor.right { right: 10px; top: 100px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav.theme-nav { gap: 0.25rem; padding: 0.5rem; }
+      nav.theme-nav a { padding: 0.4rem 0.6rem; font-size: 0.65rem; }
+      header { padding: 0.75rem 1rem; }
+      header h1 { font-size: 1rem; }
+      main { padding: 1rem; }
+      .round-gauge { width: 150px; height: 150px; }
+      .round-gauge .gauge-value { font-size: 1.5rem; }
+      .round-gauge .tick { transform: rotate(var(--angle)) translateY(-70px) rotate(calc(-1 * var(--angle))); }
+      .gauge .gauge-value { font-size: 1.4rem; }
+      .jp-decor { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Japanese decorative text -->
+  <div class="jp-decor left">ドリフト</div>
+  <div class="jp-decor right">走り屋</div>
+
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/" class="active">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf">F&F</a>
+  </nav>
+
+  <header>
+    <h1>NIGHT RACER</h1>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Round Gauges -->
+    <section class="round-gauges">
+      <!-- RPM Gauge -->
+      <div class="round-gauge" data-gauge="rpm">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="rpm-round">---</div>
+          <div class="gauge-unit">RPM</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">0</span>
+          <span class="tick" style="--angle: -90deg">2k</span>
+          <span class="tick" style="--angle: -45deg">4k</span>
+          <span class="tick" style="--angle: 0deg">6k</span>
+          <span class="tick" style="--angle: 45deg">8k</span>
+        </div>
+      </div>
+
+      <!-- AFR Gauge -->
+      <div class="round-gauge" data-gauge="afr">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="afr-round">---</div>
+          <div class="gauge-unit">AFR</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">10</span>
+          <span class="tick" style="--angle: -67deg">12</span>
+          <span class="tick" style="--angle: 0deg">14.7</span>
+          <span class="tick" style="--angle: 67deg">17</span>
+          <span class="tick" style="--angle: 135deg">20</span>
+        </div>
+        <div class="afr-zones">
+          <span class="zone rich">Rich</span>
+          <span class="zone stoich">λ=1</span>
+          <span class="zone lean">Lean</span>
+        </div>
+      </div>
+
+      <!-- Coolant Gauge -->
+      <div class="round-gauge" data-gauge="coolant">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="85" />
+          <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+          <circle class="gauge-center" cx="100" cy="100" r="60" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-value" id="coolant-round">---</div>
+          <div class="gauge-unit">°F</div>
+        </div>
+        <div class="gauge-ticks">
+          <span class="tick" style="--angle: -135deg">0</span>
+          <span class="tick" style="--angle: -67deg">60</span>
+          <span class="tick" style="--angle: 0deg">120</span>
+          <span class="tick" style="--angle: 67deg">180</span>
+          <span class="tick" style="--angle: 135deg">250</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bar Gauges -->
+    <section class="gauges">
+      <div class="gauge map">
+        <div class="gauge-value" id="map">---</div>
+        <div class="gauge-label">MAP (kPa)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="map-bar"></div>
+        </div>
+      </div>
+
+      <div class="gauge tps">
+        <div class="gauge-value" id="tps">---</div>
+        <div class="gauge-label">TPS (%)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="tps-bar"></div>
+        </div>
+      </div>
+
+      <div class="gauge advance-gauge">
+        <div class="gauge-value" id="advance">---</div>
+        <div class="gauge-label">Advance (°)</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="advance-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT (°F)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">Battery (V)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW1 (ms)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">Accel Enrich (%)</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE (%)</div>
+      </div>
+    </section>
+
+    <!-- Engine Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">Running</div>
+      <div class="flag" id="flag-cranking">Cranking</div>
+      <div class="flag" id="flag-warmup">Warmup</div>
+      <div class="flag" id="flag-accel">Accel</div>
+      <div class="flag" id="flag-decel">Decel</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

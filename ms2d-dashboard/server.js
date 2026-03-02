@@ -41,13 +41,34 @@ const MIME_TYPES = {
   '.css': 'text/css',
   '.js': 'application/javascript',
   '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
+
+// Route mapping for dashboard themes
+const THEME_ROUTES = {
+  '/': 'jdm.html',
+  '/jdm': 'jdm.html',
+  '/drift': 'drift.html',
+  '/drag': 'drag.html',
+  '/ricer': 'ricer.html',
+  '/fnf': 'fnf.html',
 };
 
 // Serve static files from public/
 function serveStatic(req, res) {
-  let filePath = req.url === '/' ? '/index.html' : req.url;
-  filePath = path.join(__dirname, 'public', filePath);
+  let urlPath = req.url.split('?')[0]; // Remove query string
   
+  // Check if it's a theme route
+  if (THEME_ROUTES[urlPath]) {
+    urlPath = '/' + THEME_ROUTES[urlPath];
+  }
+  
+  const filePath = path.join(__dirname, 'public', urlPath);
   const ext = path.extname(filePath);
   const contentType = MIME_TYPES[ext] || 'text/plain';
   
@@ -78,15 +99,16 @@ async function handleAPI(req, res) {
   
   try {
     let result;
+    const url = req.url.split('?')[0];
     
-    if (req.url === '/api/status') {
+    if (url === '/api/status') {
       result = await client.getStatus();
-    } else if (req.url === '/api/all') {
+    } else if (url === '/api/all') {
       result = await client.getAll();
-    } else if (req.url === '/api/fields') {
+    } else if (url === '/api/fields') {
       result = await client.listFields();
-    } else if (req.url.startsWith('/api/value/')) {
-      const field = req.url.split('/api/value/')[1];
+    } else if (url.startsWith('/api/value/')) {
+      const field = url.split('/api/value/')[1];
       result = await client.getValue(field);
     } else if (req.url.startsWith('/api/values?')) {
       const params = new URLSearchParams(req.url.split('?')[1]);
@@ -121,6 +143,12 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, async () => {
   console.log(`MS2D Dashboard running at http://localhost:${PORT}`);
   console.log(`Using socket: ${SOCKET_PATH}`);
+  console.log('Available themes:');
+  console.log('  /      - JDM Night Racer (default)');
+  console.log('  /drift - Drift King');
+  console.log('  /drag  - Dragster');
+  console.log('  /ricer - Ricer Max');
+  console.log('  /fnf   - Fast & Furious');
   await connectClient();
 });
 

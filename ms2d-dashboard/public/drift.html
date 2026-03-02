@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DRIFT KING // ドリフトキング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0d0d0d;
+      --bg-card: #1a1a1a;
+      --burnt-orange: #ff6b00;
+      --warning-yellow: #ffd700;
+      --smoke-gray: #2a2a2a;
+      --danger-red: #ff2200;
+      --text: #ffffff;
+      --text-dim: #666;
+    }
+
+    body {
+      font-family: 'Bebas Neue', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Tire smoke particles */
+    .smoke-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .smoke {
+      position: absolute;
+      bottom: -50px;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(ellipse at center, rgba(100, 100, 100, 0.4) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: smokeRise 4s ease-out infinite;
+    }
+
+    .smoke:nth-child(1) { left: 10%; animation-delay: 0s; }
+    .smoke:nth-child(2) { left: 30%; animation-delay: 0.5s; }
+    .smoke:nth-child(3) { left: 50%; animation-delay: 1s; }
+    .smoke:nth-child(4) { left: 70%; animation-delay: 1.5s; }
+    .smoke:nth-child(5) { left: 90%; animation-delay: 2s; }
+
+    @keyframes smokeRise {
+      0% { transform: translateY(0) scale(1); opacity: 0.6; }
+      100% { transform: translateY(-300px) scale(3); opacity: 0; }
+    }
+
+    /* Diagonal stripe background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 20px,
+        rgba(255, 107, 0, 0.03) 20px,
+        rgba(255, 107, 0, 0.03) 40px
+      );
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Theme Navigation - Hazard tape style */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        #000 0px,
+        #000 10px,
+        var(--warning-yellow) 10px,
+        var(--warning-yellow) 20px
+      );
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: var(--text);
+      text-decoration: none;
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-dark);
+      border: none;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    nav.theme-nav a:hover {
+      background: var(--burnt-orange);
+      color: #000;
+    }
+
+    nav.theme-nav a.active {
+      background: var(--burnt-orange);
+      color: #000;
+      box-shadow: 0 0 20px var(--burnt-orange);
+    }
+
+    /* Header with angular cut */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      margin-top: 45px;
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card) 85%, transparent 85%);
+      border-bottom: 4px solid var(--burnt-orange);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+    }
+
+    header h1 {
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 2rem;
+      color: var(--burnt-orange);
+      text-shadow: 2px 2px 0 #000, 4px 4px 0 rgba(255, 107, 0, 0.3);
+      letter-spacing: 4px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      letter-spacing: 2px;
+    }
+
+    .status .dot {
+      width: 12px;
+      height: 12px;
+      background: var(--danger-red);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      animation: spin 2s linear infinite;
+    }
+
+    .status.connected .dot {
+      background: var(--warning-yellow);
+      box-shadow: 0 0 15px var(--warning-yellow);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Main Content */
+    main {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Large Tachometer */
+    .tachometer {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .tacho-container {
+      position: relative;
+      width: 320px;
+      height: 180px;
+    }
+
+    .tacho-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-card);
+      clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+      border: 3px solid var(--burnt-orange);
+    }
+
+    .tacho-content {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 10px;
+    }
+
+    .tacho-value {
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 4.5rem;
+      color: var(--burnt-orange);
+      text-shadow: 0 0 30px var(--burnt-orange);
+      line-height: 1;
+    }
+
+    .tacho-value.redline {
+      color: var(--danger-red);
+      text-shadow: 0 0 30px var(--danger-red);
+      animation: redlinePulse 0.2s ease-in-out infinite;
+    }
+
+    @keyframes redlinePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .tacho-label {
+      font-size: 1.5rem;
+      letter-spacing: 8px;
+      color: var(--text-dim);
+    }
+
+    .tacho-bar {
+      position: absolute;
+      bottom: 15px;
+      left: 15%;
+      right: 15%;
+      height: 12px;
+      background: var(--smoke-gray);
+      clip-path: polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%);
+    }
+
+    .tacho-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--warning-yellow), var(--burnt-orange), var(--danger-red));
+      transition: width 0.1s linear;
+    }
+
+    /* Angular Gauges */
+    .angular-gauges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .angular-gauge {
+      background: var(--bg-card);
+      padding: 1.25rem;
+      text-align: center;
+      position: relative;
+      clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px));
+      border: 2px solid var(--burnt-orange);
+    }
+
+    .angular-gauge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .angular-gauge .gauge-value {
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 2.2rem;
+      color: var(--warning-yellow);
+      text-shadow: 0 0 10px var(--warning-yellow);
+    }
+
+    .angular-gauge.afr .gauge-value { color: var(--burnt-orange); text-shadow: 0 0 10px var(--burnt-orange); }
+    .angular-gauge.coolant .gauge-value { color: #00bfff; text-shadow: 0 0 10px #00bfff; }
+
+    .angular-gauge .gauge-label {
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+    }
+
+    .angular-gauge .gauge-bar {
+      height: 8px;
+      background: var(--smoke-gray);
+      margin-top: 0.75rem;
+      clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+    }
+
+    .angular-gauge .gauge-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--burnt-orange);
+      transition: width 0.15s ease-out;
+    }
+
+    /* Hidden SVG gauges for app.js compatibility */
+    .hidden-gauges {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Value Cards - Diamond style */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 1rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+      border: 1px solid var(--smoke-gray);
+      clip-path: polygon(50% 0%, 100% 15%, 100% 85%, 50% 100%, 0% 85%, 0% 15%);
+    }
+
+    .value-card .value {
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 1.4rem;
+      color: var(--text);
+    }
+
+    .value-card .label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+      letter-spacing: 1px;
+    }
+
+    /* Status Flags - Caution style */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 0.5rem 1rem;
+      background: var(--smoke-gray);
+      font-family: 'Black Ops One', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+      clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+    }
+
+    .flag.active {
+      opacity: 1;
+      background: var(--warning-yellow);
+      color: #000;
+      box-shadow: 0 0 20px var(--warning-yellow);
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 2rem;
+      background: var(--bg-card);
+      border-top: 3px solid var(--burnt-orange);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav.theme-nav a { padding: 0.5rem 0.75rem; font-size: 0.7rem; }
+      header h1 { font-size: 1.4rem; }
+      .tacho-container { width: 260px; height: 150px; }
+      .tacho-value { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Smoke effect -->
+  <div class="smoke-container">
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+    <div class="smoke"></div>
+  </div>
+
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift" class="active">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf">F&F</a>
+  </nav>
+
+  <header>
+    <h1>⚠ DRIFT KING</h1>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Large Tachometer -->
+    <section class="tachometer">
+      <div class="tacho-container">
+        <div class="tacho-bg"></div>
+        <div class="tacho-content">
+          <div class="tacho-value" id="rpm-display">---</div>
+          <div class="tacho-label">R P M</div>
+        </div>
+        <div class="tacho-bar">
+          <div class="tacho-fill" id="rpm-tacho-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden gauges for app.js compatibility -->
+    <div class="hidden-gauges">
+      <div class="round-gauge" data-gauge="rpm">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="rpm-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="afr">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="afr-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="coolant">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="coolant-round">---</div>
+      </div>
+    </div>
+
+    <!-- Angular Gauges -->
+    <section class="angular-gauges">
+      <div class="angular-gauge afr">
+        <div class="gauge-value" id="afr-display">---</div>
+        <div class="gauge-label">A F R</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="afr-bar"></div>
+        </div>
+      </div>
+
+      <div class="angular-gauge coolant">
+        <div class="gauge-value" id="coolant-display">---</div>
+        <div class="gauge-label">COOLANT °F</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="coolant-bar"></div>
+        </div>
+      </div>
+
+      <div class="angular-gauge map">
+        <div class="gauge-value" id="map">---</div>
+        <div class="gauge-label">M A P</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="map-bar"></div>
+        </div>
+      </div>
+
+      <div class="angular-gauge tps">
+        <div class="gauge-value" id="tps">---</div>
+        <div class="gauge-label">T P S</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="tps-bar"></div>
+        </div>
+      </div>
+
+      <div class="angular-gauge advance">
+        <div class="gauge-value" id="advance">---</div>
+        <div class="gauge-label">TIMING</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="advance-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT °F</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">VOLTS</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW ms</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">ACCEL %</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE %</div>
+      </div>
+    </section>
+
+    <!-- Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">RUNNING</div>
+      <div class="flag" id="flag-cranking">CRANKING</div>
+      <div class="flag" id="flag-warmup">WARMUP</div>
+      <div class="flag" id="flag-accel">ACCEL</div>
+      <div class="flag" id="flag-decel">DECEL</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Drift King custom updates
+    const origPoll = window.poll;
+    
+    // Override to add custom display updates
+    const rpmDisplay = document.getElementById('rpm-display');
+    const rpmTachoBar = document.getElementById('rpm-tacho-bar');
+    const afrDisplay = document.getElementById('afr-display');
+    const afrBar = document.getElementById('afr-bar');
+    const coolantDisplay = document.getElementById('coolant-display');
+    const coolantBar = document.getElementById('coolant-bar');
+    
+    // Watch for DOM changes to sync values
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'rpm-round') {
+          const val = mutation.target.textContent;
+          if (rpmDisplay) {
+            rpmDisplay.textContent = val;
+            const numVal = parseFloat(val) || 0;
+            const pct = Math.min(100, (numVal / 8500) * 100);
+            if (rpmTachoBar) rpmTachoBar.style.width = `${pct}%`;
+            rpmDisplay.classList.toggle('redline', numVal >= 7000);
+          }
+        }
+        if (mutation.target.id === 'afr-round') {
+          const val = mutation.target.textContent;
+          if (afrDisplay) {
+            afrDisplay.textContent = val;
+            const numVal = parseFloat(val) || 14.7;
+            const pct = Math.min(100, Math.max(0, ((numVal - 10) / 10) * 100));
+            if (afrBar) afrBar.style.width = `${pct}%`;
+          }
+        }
+        if (mutation.target.id === 'coolant-round') {
+          const val = mutation.target.textContent;
+          if (coolantDisplay) {
+            coolantDisplay.textContent = val;
+            const numVal = parseFloat(val) || 0;
+            const pct = Math.min(100, (numVal / 250) * 100);
+            if (coolantBar) coolantBar.style.width = `${pct}%`;
+          }
+        }
+      });
+    });
+    
+    // Observe hidden gauge values
+    document.querySelectorAll('.hidden-gauges .gauge-value').forEach(el => {
+      observer.observe(el, { characterData: true, childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>

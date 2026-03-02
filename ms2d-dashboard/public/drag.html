@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DRAGSTER // STRIP MODE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #000000;
+      --bg-card: #0a0a0a;
+      --led-green: #00ff00;
+      --led-amber: #ffaa00;
+      --led-red: #ff0000;
+      --led-off: #1a1a1a;
+      --text: #00ff00;
+      --text-dim: #004400;
+    }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Theme Navigation - LED strip style */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      padding: 8px;
+      background: #000;
+      border-bottom: 2px solid var(--led-green);
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: var(--led-off);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      padding: 0.5rem 1rem;
+      background: #0a0a0a;
+      border: 1px solid #222;
+      transition: all 0.1s ease;
+    }
+
+    nav.theme-nav a:hover {
+      color: var(--led-green);
+      border-color: var(--led-green);
+      text-shadow: 0 0 10px var(--led-green);
+    }
+
+    nav.theme-nav a.active {
+      color: var(--led-green);
+      border-color: var(--led-green);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+      text-shadow: 0 0 10px var(--led-green);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      margin-top: 50px;
+      background: var(--bg-card);
+      border-bottom: 1px solid #222;
+    }
+
+    header h1 {
+      font-family: 'Teko', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--led-green);
+      text-shadow: 0 0 20px var(--led-green);
+      letter-spacing: 8px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+    }
+
+    .status .dot {
+      width: 10px;
+      height: 10px;
+      background: var(--led-red);
+      box-shadow: 0 0 10px var(--led-red);
+    }
+
+    .status.connected .dot {
+      background: var(--led-green);
+      box-shadow: 0 0 15px var(--led-green);
+    }
+
+    /* Main Content */
+    main {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Christmas Tree Staging Lights */
+    .christmas-tree {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid #222;
+    }
+
+    .tree-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tree-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+    }
+
+    .tree-light {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--led-off);
+      border: 2px solid #333;
+      transition: all 0.1s ease;
+    }
+
+    .tree-light.pre-stage { background: var(--led-off); }
+    .tree-light.stage { background: var(--led-off); }
+    .tree-light.amber { background: var(--led-off); }
+    .tree-light.green { background: var(--led-off); }
+    .tree-light.red { background: var(--led-off); }
+
+    .tree-light.active.pre-stage,
+    .tree-light.active.stage { 
+      background: var(--led-amber); 
+      box-shadow: 0 0 20px var(--led-amber);
+    }
+    .tree-light.active.amber { 
+      background: var(--led-amber); 
+      box-shadow: 0 0 20px var(--led-amber);
+    }
+    .tree-light.active.green { 
+      background: var(--led-green); 
+      box-shadow: 0 0 25px var(--led-green);
+    }
+    .tree-light.active.red { 
+      background: var(--led-red); 
+      box-shadow: 0 0 20px var(--led-red);
+    }
+
+    /* Large Digital Displays */
+    .digital-displays {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .digital-display {
+      background: var(--bg-card);
+      border: 2px solid #222;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .digital-display .display-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 4rem;
+      color: var(--led-green);
+      text-shadow: 0 0 20px var(--led-green), 0 0 40px rgba(0, 255, 0, 0.3);
+      letter-spacing: 4px;
+      line-height: 1;
+      /* LED segment look */
+      background: linear-gradient(180deg, var(--led-green) 0%, #00aa00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px var(--led-green));
+    }
+
+    .digital-display .display-label {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      letter-spacing: 4px;
+      margin-top: 0.5rem;
+      border-top: 1px solid #222;
+      padding-top: 0.5rem;
+    }
+
+    .digital-display.elapsed .display-value {
+      color: var(--led-amber);
+      text-shadow: 0 0 20px var(--led-amber);
+      background: linear-gradient(180deg, var(--led-amber) 0%, #aa7700 100%);
+      -webkit-background-clip: text;
+      filter: drop-shadow(0 0 10px var(--led-amber));
+    }
+
+    /* LED Bar Meters */
+    .led-meters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .led-meter {
+      background: var(--bg-card);
+      border: 1px solid #222;
+      padding: 1rem;
+    }
+
+    .led-meter .meter-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+
+    .led-meter .meter-value {
+      font-size: 1.5rem;
+      color: var(--led-green);
+      text-shadow: 0 0 10px var(--led-green);
+      margin-bottom: 0.5rem;
+    }
+
+    .led-meter .led-strip {
+      display: flex;
+      gap: 2px;
+    }
+
+    .led-meter .led {
+      flex: 1;
+      height: 8px;
+      background: var(--led-off);
+      transition: background 0.05s ease;
+    }
+
+    .led-meter .led.active { background: var(--led-green); box-shadow: 0 0 5px var(--led-green); }
+    .led-meter .led.warning { background: var(--led-amber); box-shadow: 0 0 5px var(--led-amber); }
+    .led-meter .led.danger { background: var(--led-red); box-shadow: 0 0 5px var(--led-red); }
+
+    /* Hidden gauges for app.js compatibility */
+    .hidden-gauges {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Value Readouts */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid #222;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .value-card .value {
+      font-size: 1.2rem;
+      color: var(--led-green);
+      text-shadow: 0 0 8px var(--led-green);
+    }
+
+    .value-card .label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 0.25rem;
+    }
+
+    /* Status Flags */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid #222;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      transition: all 0.1s ease;
+    }
+
+    .flag.active {
+      color: var(--led-green);
+      border-color: var(--led-green);
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+      text-shadow: 0 0 5px var(--led-green);
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 2rem;
+      background: var(--bg-card);
+      border-top: 1px solid #222;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .digital-displays { grid-template-columns: 1fr; }
+      .digital-display .display-value { font-size: 2.5rem; }
+      .christmas-tree { gap: 1.5rem; }
+      .tree-light { width: 24px; height: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag" class="active">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf">F&F</a>
+  </nav>
+
+  <header>
+    <h1>STRIP MODE</h1>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Christmas Tree -->
+    <section class="christmas-tree">
+      <div class="tree-column">
+        <div class="tree-label">LEFT</div>
+        <div class="tree-light pre-stage" id="left-prestage"></div>
+        <div class="tree-light stage" id="left-stage"></div>
+        <div class="tree-light amber" id="left-amber1"></div>
+        <div class="tree-light amber" id="left-amber2"></div>
+        <div class="tree-light amber" id="left-amber3"></div>
+        <div class="tree-light green" id="left-green"></div>
+        <div class="tree-light red" id="left-red"></div>
+      </div>
+      <div class="tree-column">
+        <div class="tree-label">RIGHT</div>
+        <div class="tree-light pre-stage" id="right-prestage"></div>
+        <div class="tree-light stage" id="right-stage"></div>
+        <div class="tree-light amber" id="right-amber1"></div>
+        <div class="tree-light amber" id="right-amber2"></div>
+        <div class="tree-light amber" id="right-amber3"></div>
+        <div class="tree-light green" id="right-green"></div>
+        <div class="tree-light red" id="right-red"></div>
+      </div>
+    </section>
+
+    <!-- Digital Displays -->
+    <section class="digital-displays">
+      <div class="digital-display rpm">
+        <div class="display-value" id="rpm-display">----</div>
+        <div class="display-label">RPM</div>
+      </div>
+      <div class="digital-display elapsed">
+        <div class="display-value" id="elapsed-time">0.000</div>
+        <div class="display-label">E.T. (SEC)</div>
+      </div>
+    </section>
+
+    <!-- Hidden gauges for app.js compatibility -->
+    <div class="hidden-gauges">
+      <div class="round-gauge" data-gauge="rpm">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="rpm-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="afr">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="afr-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="coolant">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+        </svg>
+        <div class="gauge-value" id="coolant-round">---</div>
+      </div>
+    </div>
+
+    <!-- LED Bar Meters -->
+    <section class="led-meters">
+      <div class="led-meter">
+        <div class="meter-label">AFR</div>
+        <div class="meter-value" id="afr-display">---</div>
+        <div class="led-strip" id="afr-leds">
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div>
+        </div>
+      </div>
+
+      <div class="led-meter">
+        <div class="meter-label">MAP kPa</div>
+        <div class="meter-value" id="map">---</div>
+        <div class="led-strip" id="map-leds">
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div>
+        </div>
+        <div class="gauge-bar" style="display:none"><div class="gauge-fill" id="map-bar"></div></div>
+      </div>
+
+      <div class="led-meter">
+        <div class="meter-label">TPS %</div>
+        <div class="meter-value" id="tps">---</div>
+        <div class="led-strip" id="tps-leds">
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div>
+        </div>
+        <div class="gauge-bar" style="display:none"><div class="gauge-fill" id="tps-bar"></div></div>
+      </div>
+
+      <div class="led-meter">
+        <div class="meter-label">TIMING °</div>
+        <div class="meter-value" id="advance">---</div>
+        <div class="led-strip" id="advance-leds">
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div>
+        </div>
+        <div class="gauge-bar" style="display:none"><div class="gauge-fill" id="advance-bar"></div></div>
+      </div>
+
+      <div class="led-meter">
+        <div class="meter-label">COOLANT °F</div>
+        <div class="meter-value" id="coolant-display">---</div>
+        <div class="led-strip" id="coolant-leds">
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div><div class="led"></div><div class="led"></div>
+          <div class="led"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT °F</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">VOLTS</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW ms</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">ACCEL %</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE %</div>
+      </div>
+    </section>
+
+    <!-- Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">RUNNING</div>
+      <div class="flag" id="flag-cranking">CRANKING</div>
+      <div class="flag" id="flag-warmup">WARMUP</div>
+      <div class="flag" id="flag-accel">ACCEL</div>
+      <div class="flag" id="flag-decel">DECEL</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Dragster custom updates
+    const rpmDisplay = document.getElementById('rpm-display');
+    const afrDisplay = document.getElementById('afr-display');
+    const coolantDisplay = document.getElementById('coolant-display');
+    
+    // LED strip updater
+    function updateLedStrip(stripId, value, max, thresholds = {warning: 0.7, danger: 0.9}) {
+      const strip = document.getElementById(stripId);
+      if (!strip) return;
+      const leds = strip.querySelectorAll('.led');
+      const pct = Math.min(1, value / max);
+      const activeCount = Math.round(pct * leds.length);
+      
+      leds.forEach((led, i) => {
+        led.classList.remove('active', 'warning', 'danger');
+        if (i < activeCount) {
+          const ledPct = (i + 1) / leds.length;
+          if (ledPct >= thresholds.danger) {
+            led.classList.add('danger');
+          } else if (ledPct >= thresholds.warning) {
+            led.classList.add('warning');
+          } else {
+            led.classList.add('active');
+          }
+        }
+      });
+    }
+    
+    // Christmas tree animation based on RPM
+    let treeState = 0;
+    function updateTree(rpm) {
+      const lights = {
+        prestage: document.querySelectorAll('.tree-light.pre-stage'),
+        stage: document.querySelectorAll('.tree-light.stage'),
+        amber1: document.querySelectorAll('#left-amber1, #right-amber1'),
+        amber2: document.querySelectorAll('#left-amber2, #right-amber2'),
+        amber3: document.querySelectorAll('#left-amber3, #right-amber3'),
+        green: document.querySelectorAll('.tree-light.green'),
+        red: document.querySelectorAll('.tree-light.red')
+      };
+      
+      // Clear all
+      document.querySelectorAll('.tree-light').forEach(l => l.classList.remove('active'));
+      
+      if (rpm > 500) {
+        lights.prestage.forEach(l => l.classList.add('active'));
+        lights.stage.forEach(l => l.classList.add('active'));
+      }
+      if (rpm > 2000) {
+        lights.amber1.forEach(l => l.classList.add('active'));
+      }
+      if (rpm > 3500) {
+        lights.amber2.forEach(l => l.classList.add('active'));
+      }
+      if (rpm > 5000) {
+        lights.amber3.forEach(l => l.classList.add('active'));
+      }
+      if (rpm > 6000) {
+        lights.green.forEach(l => l.classList.add('active'));
+      }
+      if (rpm > 7500) {
+        lights.red.forEach(l => l.classList.add('active'));
+      }
+    }
+    
+    // Watch for DOM changes to sync values
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'rpm-round') {
+          const val = mutation.target.textContent;
+          if (rpmDisplay) rpmDisplay.textContent = val.replace('---', '----');
+          const numVal = parseFloat(val) || 0;
+          updateTree(numVal);
+        }
+        if (mutation.target.id === 'afr-round') {
+          const val = mutation.target.textContent;
+          if (afrDisplay) afrDisplay.textContent = val;
+          const numVal = parseFloat(val) || 14.7;
+          updateLedStrip('afr-leds', numVal - 10, 10, {warning: 0.5, danger: 0.8});
+        }
+        if (mutation.target.id === 'coolant-round') {
+          const val = mutation.target.textContent;
+          if (coolantDisplay) coolantDisplay.textContent = val;
+          const numVal = parseFloat(val) || 0;
+          updateLedStrip('coolant-leds', numVal, 250, {warning: 0.75, danger: 0.9});
+        }
+        if (mutation.target.id === 'map') {
+          const numVal = parseFloat(mutation.target.textContent) || 0;
+          updateLedStrip('map-leds', numVal, 250);
+        }
+        if (mutation.target.id === 'tps') {
+          const numVal = parseFloat(mutation.target.textContent) || 0;
+          updateLedStrip('tps-leds', numVal, 100);
+        }
+        if (mutation.target.id === 'advance') {
+          const numVal = parseFloat(mutation.target.textContent) || 0;
+          updateLedStrip('advance-leds', numVal, 50);
+        }
+      });
+    });
+    
+    // Observe gauge values
+    document.querySelectorAll('.hidden-gauges .gauge-value, .led-meter .meter-value').forEach(el => {
+      observer.observe(el, { characterData: true, childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>

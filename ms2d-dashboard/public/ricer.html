@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RICER MAX // FULL SEND</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #12121a;
+    }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--bg-dark);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated RGB background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 20% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(128, 0, 255, 0.1) 0%, transparent 60%);
+      animation: rgbShift 10s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    @keyframes rgbShift {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(60deg); }
+    }
+
+    /* Carbon fiber pattern */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.02) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.02) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.02) 75%);
+      background-size: 4px 4px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* RGB LED border animation */
+    .rgb-border {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .rgb-border::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0080ff, #8000ff, #ff0080, #ff0000);
+      background-size: 200% 100%;
+      animation: rgbFlow 3s linear infinite;
+    }
+
+    .rgb-border::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0080ff, #8000ff, #ff0080, #ff0000);
+      background-size: 200% 100%;
+      animation: rgbFlow 3s linear infinite reverse;
+    }
+
+    @keyframes rgbFlow {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+
+    /* Theme Navigation - RGB style */
+    nav.theme-nav {
+      position: fixed;
+      top: 3px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px;
+      background: rgba(10, 10, 15, 0.95);
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: #888;
+      text-decoration: none;
+      font-family: 'Audiowide', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      padding: 0.5rem 1rem;
+      background: var(--bg-card);
+      border: 2px solid transparent;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    nav.theme-nav a:hover {
+      border-image: linear-gradient(90deg, #ff0080, #00ffff) 1;
+      color: #fff;
+    }
+
+    nav.theme-nav a.active {
+      background: linear-gradient(135deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3));
+      border: 2px solid;
+      border-image: linear-gradient(90deg, #ff0080, #00ffff, #ff0080) 1;
+      color: #fff;
+      animation: activePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes activePulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 128, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      margin-top: 55px;
+      background: linear-gradient(90deg, rgba(255, 0, 128, 0.1), rgba(0, 255, 255, 0.1));
+      border-bottom: 2px solid;
+      border-image: linear-gradient(90deg, #ff0080, #00ffff) 1;
+    }
+
+    header h1 {
+      font-family: 'Audiowide', sans-serif;
+      font-size: 1.8rem;
+      background: linear-gradient(90deg, #ff0080, #ff8000, #ffff00, #00ff00, #00ffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textRgb 5s linear infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 0, 128, 0.5));
+    }
+
+    @keyframes textRgb {
+      0%, 100% { filter: hue-rotate(0deg) drop-shadow(0 0 10px rgba(255, 0, 128, 0.5)); }
+      50% { filter: hue-rotate(180deg) drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)); }
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+    }
+
+    .status .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ff0040;
+      animation: statusPulse 1s ease-in-out infinite;
+    }
+
+    .status.connected .dot {
+      background: linear-gradient(45deg, #00ff00, #00ffff);
+      box-shadow: 0 0 15px #00ff00;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    /* Main Content */
+    main {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Multi-ring RPM gauge */
+    .mega-gauge {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .mega-gauge-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .mega-gauge svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-135deg);
+    }
+
+    .mega-gauge circle {
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .mega-gauge .ring-bg {
+      stroke: rgba(255, 255, 255, 0.1);
+    }
+
+    .mega-gauge .ring-1 {
+      stroke: url(#rgbGradient1);
+      stroke-width: 8;
+      stroke-dasharray: 401;
+      stroke-dashoffset: 401;
+      filter: drop-shadow(0 0 8px #ff0080);
+      transition: stroke-dashoffset 0.15s ease-out;
+    }
+
+    .mega-gauge .ring-2 {
+      stroke: url(#rgbGradient2);
+      stroke-width: 6;
+      stroke-dasharray: 353;
+      stroke-dashoffset: 353;
+      filter: drop-shadow(0 0 6px #00ffff);
+      transition: stroke-dashoffset 0.15s ease-out;
+    }
+
+    .mega-gauge .ring-3 {
+      stroke: url(#rgbGradient3);
+      stroke-width: 4;
+      stroke-dasharray: 306;
+      stroke-dashoffset: 306;
+      filter: drop-shadow(0 0 4px #ffff00);
+      transition: stroke-dashoffset 0.15s ease-out;
+    }
+
+    .mega-gauge-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .mega-gauge-value {
+      font-family: 'Audiowide', sans-serif;
+      font-size: 3.5rem;
+      background: linear-gradient(180deg, #fff, #888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 20px rgba(255, 0, 128, 0.5));
+      line-height: 1;
+    }
+
+    .mega-gauge-label {
+      font-size: 1rem;
+      letter-spacing: 6px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    /* Shift lights */
+    .shift-lights {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: -30px;
+      margin-bottom: 10px;
+    }
+
+    .shift-light {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #222;
+      border: 2px solid #333;
+      transition: all 0.1s ease;
+    }
+
+    .shift-light.active:nth-child(1),
+    .shift-light.active:nth-child(2),
+    .shift-light.active:nth-child(3) { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
+    .shift-light.active:nth-child(4),
+    .shift-light.active:nth-child(5),
+    .shift-light.active:nth-child(6) { background: #ffff00; box-shadow: 0 0 15px #ffff00; }
+    .shift-light.active:nth-child(7),
+    .shift-light.active:nth-child(8) { background: #ff8000; box-shadow: 0 0 15px #ff8000; }
+    .shift-light.active:nth-child(9),
+    .shift-light.active:nth-child(10) { background: #ff0000; box-shadow: 0 0 15px #ff0000; animation: redFlash 0.2s infinite; }
+
+    @keyframes redFlash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Hidden gauges for app.js */
+    .hidden-gauges {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* All the gauges grid */
+    .all-gauges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .mini-gauge {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-gauge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .mini-gauge .gauge-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .mini-gauge .gauge-value {
+      font-family: 'Audiowide', sans-serif;
+      font-size: 1.6rem;
+      background: linear-gradient(180deg, #fff, #aaa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .mini-gauge .gauge-label {
+      font-size: 0.65rem;
+      color: #666;
+      letter-spacing: 1px;
+      margin: 0.25rem 0;
+    }
+
+    .mini-gauge .gauge-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .mini-gauge .gauge-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0080, #00ffff);
+      border-radius: 2px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 10px #ff0080;
+    }
+
+    /* RGB LED strip under each gauge */
+    .mini-gauge .led-strip {
+      display: flex;
+      gap: 2px;
+      margin-top: 0.5rem;
+    }
+
+    .mini-gauge .led {
+      flex: 1;
+      height: 3px;
+      background: #222;
+      transition: all 0.1s ease;
+    }
+
+    .mini-gauge .led.r { background: #ff0000; box-shadow: 0 0 5px #ff0000; }
+    .mini-gauge .led.g { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+    .mini-gauge .led.b { background: #0000ff; box-shadow: 0 0 5px #0000ff; }
+    .mini-gauge .led.c { background: #00ffff; box-shadow: 0 0 5px #00ffff; }
+    .mini-gauge .led.m { background: #ff00ff; box-shadow: 0 0 5px #ff00ff; }
+    .mini-gauge .led.y { background: #ffff00; box-shadow: 0 0 5px #ffff00; }
+
+    /* Value Cards */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .value-card .value {
+      font-family: 'Audiowide', sans-serif;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .value-card .label {
+      font-size: 0.55rem;
+      color: #555;
+      letter-spacing: 1px;
+      margin-top: 0.2rem;
+    }
+
+    /* Status Flags with RGB */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid #333;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+    }
+
+    .flag.active {
+      opacity: 1;
+      background: linear-gradient(135deg, rgba(0, 255, 0, 0.3), rgba(0, 255, 255, 0.3));
+      border: 1px solid;
+      border-image: linear-gradient(90deg, #00ff00, #00ffff) 1;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 2rem;
+      background: var(--bg-card);
+      border-top: 2px solid;
+      border-image: linear-gradient(90deg, #ff0080, #00ffff) 1;
+      font-size: 0.7rem;
+      color: #555;
+      letter-spacing: 2px;
+      margin-bottom: 3px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .mega-gauge-container { width: 220px; height: 220px; }
+      .mega-gauge-value { font-size: 2.5rem; }
+      .shift-lights { gap: 4px; }
+      .shift-light { width: 14px; height: 14px; }
+      .all-gauges { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="rgb-border"></div>
+
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer" class="active">RICER</a>
+    <a href="/fnf">F&F</a>
+  </nav>
+
+  <header>
+    <h1>RICER MAX</h1>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Mega RPM Gauge -->
+    <section class="mega-gauge">
+      <div class="mega-gauge-container">
+        <svg viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="rgbGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#ff0080"/>
+              <stop offset="50%" style="stop-color:#ff8000"/>
+              <stop offset="100%" style="stop-color:#ffff00"/>
+            </linearGradient>
+            <linearGradient id="rgbGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#00ffff"/>
+              <stop offset="50%" style="stop-color:#00ff00"/>
+              <stop offset="100%" style="stop-color:#80ff00"/>
+            </linearGradient>
+            <linearGradient id="rgbGradient3" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#8000ff"/>
+              <stop offset="50%" style="stop-color:#ff00ff"/>
+              <stop offset="100%" style="stop-color:#ff0080"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="100" cy="100" r="85" stroke-width="8"/>
+          <circle class="ring-bg" cx="100" cy="100" r="75" stroke-width="6"/>
+          <circle class="ring-bg" cx="100" cy="100" r="65" stroke-width="4"/>
+          <circle class="ring-1" id="rpm-ring1" cx="100" cy="100" r="85"/>
+          <circle class="ring-2" id="rpm-ring2" cx="100" cy="100" r="75"/>
+          <circle class="ring-3" id="rpm-ring3" cx="100" cy="100" r="65"/>
+        </svg>
+        <div class="mega-gauge-content">
+          <div class="mega-gauge-value" id="rpm-mega">---</div>
+          <div class="mega-gauge-label">RPM</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shift Lights -->
+    <section class="shift-lights">
+      <div class="shift-light" id="shift-1"></div>
+      <div class="shift-light" id="shift-2"></div>
+      <div class="shift-light" id="shift-3"></div>
+      <div class="shift-light" id="shift-4"></div>
+      <div class="shift-light" id="shift-5"></div>
+      <div class="shift-light" id="shift-6"></div>
+      <div class="shift-light" id="shift-7"></div>
+      <div class="shift-light" id="shift-8"></div>
+      <div class="shift-light" id="shift-9"></div>
+      <div class="shift-light" id="shift-10"></div>
+    </section>
+
+    <!-- Hidden gauges for app.js -->
+    <div class="hidden-gauges">
+      <div class="round-gauge" data-gauge="rpm">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85"/>
+        </svg>
+        <div class="gauge-value" id="rpm-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="afr">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85"/>
+        </svg>
+        <div class="gauge-value" id="afr-round">---</div>
+      </div>
+      <div class="round-gauge" data-gauge="coolant">
+        <svg viewBox="0 0 200 200">
+          <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85"/>
+        </svg>
+        <div class="gauge-value" id="coolant-round">---</div>
+      </div>
+    </div>
+
+    <!-- All the gauges -->
+    <section class="all-gauges">
+      <div class="mini-gauge">
+        <div class="gauge-icon">⛽</div>
+        <div class="gauge-value" id="afr-mini">---</div>
+        <div class="gauge-label">AFR</div>
+        <div class="led-strip">
+          <div class="led r"></div><div class="led y"></div><div class="led g"></div>
+          <div class="led c"></div><div class="led b"></div><div class="led m"></div>
+        </div>
+      </div>
+
+      <div class="mini-gauge">
+        <div class="gauge-icon">🌡️</div>
+        <div class="gauge-value" id="coolant-mini">---</div>
+        <div class="gauge-label">COOLANT °F</div>
+        <div class="led-strip">
+          <div class="led b"></div><div class="led c"></div><div class="led g"></div>
+          <div class="led y"></div><div class="led r"></div><div class="led m"></div>
+        </div>
+      </div>
+
+      <div class="mini-gauge">
+        <div class="gauge-icon">📊</div>
+        <div class="gauge-value" id="map">---</div>
+        <div class="gauge-label">MAP kPa</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="map-bar"></div>
+        </div>
+      </div>
+
+      <div class="mini-gauge">
+        <div class="gauge-icon">🦶</div>
+        <div class="gauge-value" id="tps">---</div>
+        <div class="gauge-label">TPS %</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="tps-bar"></div>
+        </div>
+      </div>
+
+      <div class="mini-gauge">
+        <div class="gauge-icon">⚡</div>
+        <div class="gauge-value" id="advance">---</div>
+        <div class="gauge-label">TIMING °</div>
+        <div class="gauge-bar">
+          <div class="gauge-fill" id="advance-bar"></div>
+        </div>
+      </div>
+
+      <div class="mini-gauge">
+        <div class="gauge-icon">🔥</div>
+        <div class="gauge-value" id="mat-mini">---</div>
+        <div class="gauge-label">IAT °F</div>
+        <div class="led-strip">
+          <div class="led c"></div><div class="led g"></div><div class="led y"></div>
+          <div class="led r"></div><div class="led m"></div><div class="led b"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT °F</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">VOLTS</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW ms</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">ACCEL %</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE %</div>
+      </div>
+    </section>
+
+    <!-- Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">RUNNING</div>
+      <div class="flag" id="flag-cranking">CRANKING</div>
+      <div class="flag" id="flag-warmup">WARMUP</div>
+      <div class="flag" id="flag-accel">ACCEL</div>
+      <div class="flag" id="flag-decel">DECEL</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Ricer Max custom updates
+    const rpmMega = document.getElementById('rpm-mega');
+    const ring1 = document.getElementById('rpm-ring1');
+    const ring2 = document.getElementById('rpm-ring2');
+    const ring3 = document.getElementById('rpm-ring3');
+    const afrMini = document.getElementById('afr-mini');
+    const coolantMini = document.getElementById('coolant-mini');
+    const matMini = document.getElementById('mat-mini');
+    
+    const ARC_LENGTHS = {
+      ring1: 2 * Math.PI * 85 * 0.75,
+      ring2: 2 * Math.PI * 75 * 0.75,
+      ring3: 2 * Math.PI * 65 * 0.75,
+    };
+    
+    function updateShiftLights(rpm) {
+      const thresholds = [3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500];
+      thresholds.forEach((threshold, i) => {
+        const light = document.getElementById(`shift-${i + 1}`);
+        if (light) {
+          light.classList.toggle('active', rpm >= threshold);
+        }
+      });
+    }
+    
+    function updateMultiRing(rpm) {
+      const max = 8500;
+      const pct = Math.min(1, rpm / max);
+      
+      const offset1 = ARC_LENGTHS.ring1 * (1 - pct);
+      const offset2 = ARC_LENGTHS.ring2 * (1 - Math.min(1, pct * 1.1));
+      const offset3 = ARC_LENGTHS.ring3 * (1 - Math.min(1, pct * 0.9));
+      
+      if (ring1) ring1.style.strokeDashoffset = offset1;
+      if (ring2) ring2.style.strokeDashoffset = offset2;
+      if (ring3) ring3.style.strokeDashoffset = offset3;
+    }
+    
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'rpm-round') {
+          const val = mutation.target.textContent;
+          if (rpmMega) rpmMega.textContent = val;
+          const numVal = parseFloat(val) || 0;
+          updateShiftLights(numVal);
+          updateMultiRing(numVal);
+        }
+        if (mutation.target.id === 'afr-round') {
+          if (afrMini) afrMini.textContent = mutation.target.textContent;
+        }
+        if (mutation.target.id === 'coolant-round') {
+          if (coolantMini) coolantMini.textContent = mutation.target.textContent;
+        }
+        if (mutation.target.id === 'mat') {
+          if (matMini) matMini.textContent = mutation.target.textContent;
+        }
+      });
+    });
+    
+    document.querySelectorAll('.hidden-gauges .gauge-value, #mat').forEach(el => {
+      observer.observe(el, { characterData: true, childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>

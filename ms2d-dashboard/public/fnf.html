@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F&F // SYSTEM ONLINE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Michroma&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #000508;
+      --bg-card: rgba(0, 20, 30, 0.6);
+      --holo-green: #00ff88;
+      --holo-cyan: #00ffff;
+      --holo-blue: #0088ff;
+      --scan-green: #00ff4455;
+      --text: #a0ffcc;
+      --text-dim: #446655;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Scan line animation */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--holo-green), transparent);
+      animation: scanDown 4s linear infinite;
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.5;
+    }
+
+    @keyframes scanDown {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    /* Theme Navigation */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      background: linear-gradient(180deg, rgba(0, 20, 30, 0.95), rgba(0, 20, 30, 0.8));
+      border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+      z-index: 100;
+    }
+
+    nav.theme-nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-family: 'Michroma', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 3px;
+      padding: 0.75rem 1.25rem;
+      border-left: 1px solid rgba(0, 255, 136, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    nav.theme-nav a:first-child { border-left: none; }
+
+    nav.theme-nav a:hover {
+      color: var(--holo-green);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    nav.theme-nav a.active {
+      color: var(--holo-green);
+      background: rgba(0, 255, 136, 0.15);
+      text-shadow: 0 0 10px var(--holo-green);
+      border-bottom: 2px solid var(--holo-green);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      margin-top: 45px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+      position: relative;
+    }
+
+    /* Corner brackets */
+    header::before, header::after,
+    .hud-panel::before, .hud-panel::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--holo-green);
+    }
+
+    header::before { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+    header::after { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+
+    header h1 {
+      font-family: 'Michroma', sans-serif;
+      font-size: 1.2rem;
+      color: var(--holo-green);
+      text-shadow: 0 0 20px var(--holo-green);
+      letter-spacing: 6px;
+    }
+
+    header h1::before {
+      content: '[ ';
+      color: var(--text-dim);
+    }
+
+    header h1::after {
+      content: ' ]';
+      color: var(--text-dim);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      font-family: 'Michroma', sans-serif;
+    }
+
+    .status .dot {
+      width: 8px;
+      height: 8px;
+      background: #ff0040;
+      animation: statusBlink 1s step-end infinite;
+    }
+
+    .status.connected .dot {
+      background: var(--holo-green);
+      box-shadow: 0 0 15px var(--holo-green);
+      animation: none;
+    }
+
+    @keyframes statusBlink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .system-text {
+      position: absolute;
+      right: 100px;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* Main Content */
+    main {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* HUD Panel style */
+    .hud-panel {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .hud-panel::before { bottom: 5px; left: 5px; border-right: none; border-top: none; top: auto; }
+    .hud-panel::after { bottom: 5px; right: 5px; border-left: none; border-top: none; top: auto; }
+
+    .hud-panel .panel-title {
+      position: absolute;
+      top: -10px;
+      left: 30px;
+      background: var(--bg-dark);
+      padding: 0 10px;
+      font-family: 'Michroma', sans-serif;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+    }
+
+    /* Main gauges row */
+    .main-gauges {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    /* Holographic gauge */
+    .holo-gauge {
+      position: relative;
+      width: 180px;
+      height: 180px;
+    }
+
+    .holo-gauge svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-135deg);
+    }
+
+    .holo-gauge circle {
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .holo-gauge .gauge-bg {
+      stroke: rgba(0, 255, 136, 0.1);
+      stroke-width: 2;
+    }
+
+    .holo-gauge .gauge-track {
+      stroke: rgba(0, 255, 136, 0.2);
+      stroke-width: 8;
+      stroke-dasharray: 4 4;
+    }
+
+    .holo-gauge .gauge-arc {
+      stroke: var(--holo-green);
+      stroke-width: 6;
+      stroke-dasharray: 401;
+      stroke-dashoffset: 401;
+      filter: drop-shadow(0 0 8px var(--holo-green));
+      transition: stroke-dashoffset 0.15s ease-out;
+    }
+
+    .holo-gauge .gauge-arc.afr-arc {
+      stroke: var(--holo-cyan);
+      filter: drop-shadow(0 0 8px var(--holo-cyan));
+    }
+
+    .holo-gauge .gauge-arc.coolant-arc {
+      stroke: var(--holo-blue);
+      filter: drop-shadow(0 0 8px var(--holo-blue));
+    }
+
+    .holo-gauge .gauge-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .holo-gauge .gauge-value {
+      font-family: 'Michroma', sans-serif;
+      font-size: 1.8rem;
+      color: var(--holo-green);
+      text-shadow: 0 0 15px var(--holo-green);
+      line-height: 1;
+    }
+
+    .holo-gauge[data-gauge="afr"] .gauge-value {
+      color: var(--holo-cyan);
+      text-shadow: 0 0 15px var(--holo-cyan);
+    }
+
+    .holo-gauge[data-gauge="coolant"] .gauge-value {
+      color: var(--holo-blue);
+      text-shadow: 0 0 15px var(--holo-blue);
+    }
+
+    .holo-gauge .gauge-unit {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      margin-top: 0.25rem;
+    }
+
+    /* Targeting reticle decoration */
+    .holo-gauge .reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      border: 1px dashed rgba(0, 255, 136, 0.2);
+      border-radius: 50%;
+      animation: reticleSpin 20s linear infinite;
+    }
+
+    @keyframes reticleSpin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Tick marks */
+    .holo-gauge .gauge-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .holo-gauge .tick {
+      position: absolute;
+      font-size: 0.5rem;
+      color: var(--text-dim);
+      top: 50%;
+      left: 50%;
+      transform-origin: center;
+      transform: rotate(var(--angle)) translateY(-82px) rotate(calc(-1 * var(--angle)));
+    }
+
+    /* Bar gauges */
+    .bar-gauges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .hud-bar {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      padding: 1rem;
+    }
+
+    .hud-bar .bar-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+
+    .hud-bar .bar-name {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    .hud-bar .bar-value {
+      font-family: 'Michroma', sans-serif;
+      font-size: 1.2rem;
+      color: var(--holo-green);
+      text-shadow: 0 0 10px var(--holo-green);
+    }
+
+    .hud-bar .bar-track {
+      height: 6px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      position: relative;
+    }
+
+    .hud-bar .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--holo-green), var(--holo-cyan));
+      box-shadow: 0 0 10px var(--holo-green);
+      transition: width 0.15s ease-out;
+    }
+
+    /* Hidden gauges for app.js */
+    .hidden-gauges {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Value readouts */
+    .values {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 136, 0.1);
+      padding: 0.75rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .value-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--holo-green), transparent);
+    }
+
+    .value-card .value {
+      font-family: 'Michroma', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .value-card .label {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 0.2rem;
+    }
+
+    /* Status Flags */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .flag {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 255, 136, 0.1);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      transition: all 0.2s ease;
+    }
+
+    .flag::before {
+      content: '◇ ';
+      color: var(--text-dim);
+    }
+
+    .flag.active {
+      color: var(--holo-green);
+      border-color: var(--holo-green);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+      text-shadow: 0 0 5px var(--holo-green);
+    }
+
+    .flag.active::before {
+      content: '◆ ';
+      color: var(--holo-green);
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 2rem;
+      background: var(--bg-card);
+      border-top: 1px solid rgba(0, 255, 136, 0.2);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    footer span::before {
+      content: '// ';
+      color: rgba(0, 255, 136, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav.theme-nav a { padding: 0.5rem 0.75rem; font-size: 0.55rem; }
+      header h1 { font-size: 0.9rem; letter-spacing: 3px; }
+      .holo-gauge { width: 140px; height: 140px; }
+      .holo-gauge .gauge-value { font-size: 1.4rem; }
+      .holo-gauge .reticle { width: 90px; height: 90px; }
+      .holo-gauge .tick { transform: rotate(var(--angle)) translateY(-65px) rotate(calc(-1 * var(--angle))); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf" class="active">F&F</a>
+  </nav>
+
+  <header>
+    <h1>SYSTEM ONLINE</h1>
+    <span class="system-text">v2.0.4</span>
+    <div id="status" class="status disconnected">
+      <span class="dot"></span>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Main Gauges Panel -->
+    <section class="hud-panel">
+      <span class="panel-title">PRIMARY SYSTEMS</span>
+      <div class="main-gauges">
+        <!-- RPM Gauge -->
+        <div class="holo-gauge" data-gauge="rpm">
+          <svg viewBox="0 0 200 200">
+            <circle class="gauge-bg" cx="100" cy="100" r="85" />
+            <circle class="gauge-track" cx="100" cy="100" r="85" />
+            <circle class="gauge-arc" id="rpm-arc" cx="100" cy="100" r="85" />
+          </svg>
+          <div class="reticle"></div>
+          <div class="gauge-content">
+            <div class="gauge-value" id="rpm-round">---</div>
+            <div class="gauge-unit">RPM</div>
+          </div>
+          <div class="gauge-ticks">
+            <span class="tick" style="--angle: -135deg">0</span>
+            <span class="tick" style="--angle: -90deg">2K</span>
+            <span class="tick" style="--angle: -45deg">4K</span>
+            <span class="tick" style="--angle: 0deg">6K</span>
+            <span class="tick" style="--angle: 45deg">8K</span>
+          </div>
+        </div>
+
+        <!-- AFR Gauge -->
+        <div class="holo-gauge" data-gauge="afr">
+          <svg viewBox="0 0 200 200">
+            <circle class="gauge-bg" cx="100" cy="100" r="85" />
+            <circle class="gauge-track" cx="100" cy="100" r="85" />
+            <circle class="gauge-arc afr-arc" id="afr-arc" cx="100" cy="100" r="85" />
+          </svg>
+          <div class="reticle"></div>
+          <div class="gauge-content">
+            <div class="gauge-value" id="afr-round">---</div>
+            <div class="gauge-unit">AFR</div>
+          </div>
+          <div class="gauge-ticks">
+            <span class="tick" style="--angle: -135deg">10</span>
+            <span class="tick" style="--angle: -67deg">12</span>
+            <span class="tick" style="--angle: 0deg">14.7</span>
+            <span class="tick" style="--angle: 67deg">17</span>
+            <span class="tick" style="--angle: 135deg">20</span>
+          </div>
+        </div>
+
+        <!-- Coolant Gauge -->
+        <div class="holo-gauge" data-gauge="coolant">
+          <svg viewBox="0 0 200 200">
+            <circle class="gauge-bg" cx="100" cy="100" r="85" />
+            <circle class="gauge-track" cx="100" cy="100" r="85" />
+            <circle class="gauge-arc coolant-arc" id="coolant-arc" cx="100" cy="100" r="85" />
+          </svg>
+          <div class="reticle"></div>
+          <div class="gauge-content">
+            <div class="gauge-value" id="coolant-round">---</div>
+            <div class="gauge-unit">°F</div>
+          </div>
+          <div class="gauge-ticks">
+            <span class="tick" style="--angle: -135deg">0</span>
+            <span class="tick" style="--angle: -67deg">60</span>
+            <span class="tick" style="--angle: 0deg">120</span>
+            <span class="tick" style="--angle: 67deg">180</span>
+            <span class="tick" style="--angle: 135deg">250</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bar Gauges -->
+    <section class="bar-gauges">
+      <div class="hud-bar">
+        <div class="bar-label">
+          <span class="bar-name">MAP</span>
+          <span class="bar-value" id="map">---</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="map-bar"></div>
+        </div>
+      </div>
+
+      <div class="hud-bar">
+        <div class="bar-label">
+          <span class="bar-name">TPS</span>
+          <span class="bar-value" id="tps">---</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="tps-bar"></div>
+        </div>
+      </div>
+
+      <div class="hud-bar">
+        <div class="bar-label">
+          <span class="bar-name">TIMING</span>
+          <span class="bar-value" id="advance">---</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="advance-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Values -->
+    <section class="values">
+      <div class="value-card">
+        <div class="value" id="mat">---</div>
+        <div class="label">IAT °F</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="batteryVoltage">---</div>
+        <div class="label">VOLTS</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="pulseWidth1">---</div>
+        <div class="label">PW MS</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="dutyCycle1">---</div>
+        <div class="label">ACCEL %</div>
+      </div>
+
+      <div class="value-card">
+        <div class="value" id="veCurr1">---</div>
+        <div class="label">VE %</div>
+      </div>
+    </section>
+
+    <!-- Status Flags -->
+    <section class="flags">
+      <div class="flag" id="flag-running">RUNNING</div>
+      <div class="flag" id="flag-cranking">CRANKING</div>
+      <div class="flag" id="flag-warmup">WARMUP</div>
+      <div class="flag" id="flag-accel">ACCEL</div>
+      <div class="flag" id="flag-decel">DECEL</div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="signature">---</span>
+    <span id="poll-time">Last update: ---</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
