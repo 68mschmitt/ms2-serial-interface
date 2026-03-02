@@ -1045,72 +1045,51 @@
     }
 
     /* ============================================================================
-       DUAL-VALUE GAUGE OVERLAYS (Small gauges - AFR, Boost, Oil Temp)
+       SECONDARY VALUE BADGES (Small gauges - AFR, Boost, Oil Temp)
+       Shows additional value at bottom of gauge without covering original design
        ============================================================================ */
 
-    .dual-gauge-overlay {
-      background: radial-gradient(ellipse at 30% 30%, #151515 0%, #0a0a0a 60%, #050505 100%);
-    }
-
-    .dual-gauge-overlay .overlay-digital {
-      height: auto;
-      padding: 15% 0 5% 0;
-    }
-
-    .dual-gauge-content {
-      display: flex;
+    .gauge-value-badge {
+      position: absolute;
+      bottom: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
       flex-direction: column;
       align-items: center;
-      width: 100%;
-      height: 100%;
-      padding-top: 12%;
+      z-index: 10;
     }
 
-    .dual-value-primary {
+    .gauge-value-badge.active {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 5%;
     }
 
-    .dual-value-primary .value {
-      font-size: 1.8em;
-      font-weight: bold;
-      color: var(--text-white);
-      line-height: 1;
-    }
-
-    .dual-value-primary .label {
-      font-size: 0.5em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 2px;
-    }
-
-    .dual-value-secondary {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8% 12%;
-      background: rgba(0,0,0,0.3);
-      border-radius: 6px;
-      border: 1px solid #333;
-    }
-
-    .dual-value-secondary .value {
-      font-size: 1.4em;
+    .gauge-value-badge .value {
+      font-size: 1.1em;
       font-weight: bold;
       color: var(--needle-orange);
       line-height: 1;
     }
 
-    .dual-value-secondary .label {
+    .gauge-value-badge .label {
       font-size: 0.45em;
       color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 2px;
+      letter-spacing: 0.5px;
+      margin-top: 1px;
+    }
+
+    /* Oil center gauge - slightly smaller badge */
+    .gauge.oil-center .gauge-value-badge {
+      bottom: 10%;
+    }
+
+    .gauge.oil-center .gauge-value-badge .value {
+      font-size: 0.9em;
+    }
+
+    .gauge.oil-center .gauge-value-badge .label {
+      font-size: 0.4em;
     }
 
     /* AFR specific coloring */
@@ -1189,18 +1168,10 @@
               <circle class="center-cap-inner" cx="50" cy="50" r="4"/>
             </g>
           </svg>
-          <!-- Boost Overlay -->
-          <div class="gauge-overlay dual-gauge-overlay" id="boost-overlay">
-            <div class="dual-gauge-content">
-              <div class="dual-value-primary">
-                <span class="value" id="fuel-display">55</span>
-                <span class="label">Fuel %</span>
-              </div>
-              <div class="dual-value-secondary">
-                <span class="value boost-value" id="boost-display">-15</span>
-                <span class="label">inHg / PSI</span>
-              </div>
-            </div>
+          <!-- Boost Value Badge -->
+          <div class="gauge-value-badge" id="boost-badge">
+            <span class="value boost-value" id="boost-display">-15</span>
+            <span class="label">Boost</span>
           </div>
         </div>
 
@@ -1310,18 +1281,10 @@
                 <circle class="center-cap-inner" cx="50" cy="50" r="3"/>
               </g>
             </svg>
-            <!-- AFR Overlay -->
-            <div class="gauge-overlay dual-gauge-overlay" id="afr-overlay">
-              <div class="dual-gauge-content">
-                <div class="dual-value-primary">
-                  <span class="value" id="oil-psi-display">42</span>
-                  <span class="label">Oil PSI</span>
-                </div>
-                <div class="dual-value-secondary">
-                  <span class="value afr-value" id="afr-display">14.7</span>
-                  <span class="label">AFR</span>
-                </div>
-              </div>
+            <!-- AFR Value Badge -->
+            <div class="gauge-value-badge" id="afr-badge">
+              <span class="value afr-value" id="afr-display">14.7</span>
+              <span class="label">AFR</span>
             </div>
           </div>
         </div>
@@ -1384,18 +1347,10 @@
               <circle class="center-cap-inner" cx="50" cy="50" r="4"/>
             </g>
           </svg>
-          <!-- Oil Temp Overlay -->
-          <div class="gauge-overlay dual-gauge-overlay" id="oil-temp-overlay">
-            <div class="dual-gauge-content">
-              <div class="dual-value-primary">
-                <span class="value" id="coolant-display">185</span>
-                <span class="label">Coolant °F</span>
-              </div>
-              <div class="dual-value-secondary">
-                <span class="value oil-temp-value" id="oil-temp-display">210</span>
-                <span class="label">Oil °F</span>
-              </div>
-            </div>
+          <!-- Oil Temp Value Badge -->
+          <div class="gauge-value-badge" id="oil-temp-badge">
+            <span class="value oil-temp-value" id="oil-temp-display">210</span>
+            <span class="label">Oil °F</span>
           </div>
         </div>
       </div>
@@ -1535,16 +1490,16 @@
       oilTemp: 210
     };
 
-    // Toggle overlay mapping
+    // Toggle overlay/badge mapping
     const overlayMap = {
       'android-auto': 'android-auto-overlay',
       'plex': 'plex-overlay',
       'youtube': 'youtube-overlay',
       'left-blindspot': 'left-blindspot-overlay',
       'right-blindspot': 'right-blindspot-overlay',
-      'afr': 'afr-overlay',
-      'boost': 'boost-overlay',
-      'oil-temp': 'oil-temp-overlay'
+      'afr': 'afr-badge',
+      'boost': 'boost-badge',
+      'oil-temp': 'oil-temp-badge'
     };
 
     // Mutually exclusive groups (only one can be active at a time)
@@ -1614,13 +1569,9 @@
         }
       }
 
-      // AFR - Oil PSI and AFR display
+      // AFR display (badge only - gauge remains unchanged)
       if (toggleState['afr']) {
-        const oilDisplay = document.getElementById('oil-psi-display');
         const afrDisplay = document.getElementById('afr-display');
-        if (oilDisplay) {
-          oilDisplay.textContent = Math.round(currentValues.oilPsi);
-        }
         if (afrDisplay) {
           const afr = currentValues.afr;
           afrDisplay.textContent = afr.toFixed(1);
@@ -1634,13 +1585,9 @@
         }
       }
 
-      // Boost - Fuel and Boost display
+      // Boost display (badge only - gauge remains unchanged)
       if (toggleState['boost']) {
-        const fuelDisplay = document.getElementById('fuel-display');
         const boostDisplay = document.getElementById('boost-display');
-        if (fuelDisplay) {
-          fuelDisplay.textContent = Math.round(currentValues.fuel);
-        }
         if (boostDisplay) {
           const boost = currentValues.boost;
           boostDisplay.textContent = Math.round(boost);
@@ -1654,13 +1601,9 @@
         }
       }
 
-      // Oil Temp - Coolant and Oil Temp display
+      // Oil Temp display (badge only - gauge remains unchanged)
       if (toggleState['oil-temp']) {
-        const coolantDisplay = document.getElementById('coolant-display');
         const oilTempDisplay = document.getElementById('oil-temp-display');
-        if (coolantDisplay) {
-          coolantDisplay.textContent = Math.round(currentValues.coolant);
-        }
         if (oilTempDisplay) {
           const oilTemp = currentValues.oilTemp;
           oilTempDisplay.textContent = Math.round(oilTemp);
