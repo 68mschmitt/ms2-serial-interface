@@ -69,6 +69,8 @@ const THEME_ROUTES = {
   '/ricer': 'ricer.html',
   '/fnf': 'fnf.html',
   '/ultimate': 'ultimate.html',
+  '/miata': 'miata.html',
+  '/miata2': 'miata2.html',
 };
 
 // Serve static files from public/

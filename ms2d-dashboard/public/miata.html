@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1995 NA Miata Gauge Cluster</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* 1995 NA Miata authentic colors */
+      --cluster-bg: #1a1a1a;
+      --gauge-face: #0a0a0a;
+      --gauge-ring: #2a2a2a;
+      --text-white: #e8e8e8;
+      --text-dim: #888;
+      --needle-orange: #ff6b35;
+      --needle-shadow: rgba(255, 107, 53, 0.4);
+      --redline-red: #cc0000;
+      --tick-white: #d0d0d0;
+      --warning-red: #ff0000;
+      --warning-amber: #ffaa00;
+      --backlight-green: #3a5a3a;
+    }
+
+    @font-face {
+      font-family: 'GaugeFont';
+      src: local('DIN'), local('Eurostile'), local('Arial Narrow'), local('Helvetica Neue');
+    }
+
+    body {
+      font-family: 'GaugeFont', 'Arial Narrow', Arial, sans-serif;
+      background: #000;
+      color: var(--text-white);
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Theme Navigation - hidden by default, show on hover */
+    nav.theme-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: rgba(0, 0, 0, 0.95);
+      border-bottom: 1px solid #333;
+      z-index: 100;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    nav.theme-nav:hover,
+    body:hover nav.theme-nav {
+      transform: translateY(0);
+    }
+
+    /* Show nav when mouse near top */
+    .nav-trigger {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      z-index: 99;
+    }
+
+    .nav-trigger:hover + nav.theme-nav,
+    nav.theme-nav:hover {
+      transform: translateY(0);
+    }
+
+    nav.theme-nav a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.3rem 0.6rem;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    nav.theme-nav a:hover {
+      color: #fff;
+      border-color: #444;
+    }
+
+    nav.theme-nav a.active {
+      color: var(--needle-orange);
+      border-color: var(--needle-orange);
+    }
+
+    /* Main cluster container - fills screen */
+    .cluster-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    /* Cluster housing - mimics the plastic bezel */
+    .cluster-housing {
+      background: linear-gradient(180deg, #252525 0%, #1a1a1a 30%, #0f0f0f 100%);
+      border-radius: 20px;
+      padding: 3vh 3vw;
+      box-shadow: 
+        inset 0 2px 8px rgba(255,255,255,0.05),
+        inset 0 -5px 20px rgba(0,0,0,0.5),
+        0 10px 50px rgba(0,0,0,0.9);
+      border: 3px solid #3a3a3a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Main gauge layout - authentic NA Miata configuration */
+    .gauge-layout {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5vw;
+      position: relative;
+    }
+
+    /* Individual gauge container */
+    .gauge {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Large gauges (tach and speedo) - scale to viewport */
+    .gauge.large {
+      width: min(32vh, 28vw);
+      height: min(32vh, 28vw);
+    }
+
+    /* Small gauges (fuel, temp) */
+    .gauge.small {
+      width: min(14vh, 12vw);
+      height: min(14vh, 12vw);
+    }
+
+    /* Oil pressure gauge (center) */
+    .gauge.oil-center {
+      width: min(11vh, 9vw);
+      height: min(11vh, 9vw);
+    }
+
+    /* Center column between main gauges */
+    .center-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1vh;
+      margin: 0 0.5vw;
+    }
+
+    /* Gauge face */
+    .gauge-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 30% 30%, #151515 0%, #0a0a0a 60%, #050505 100%);
+      border: 3px solid #3a3a3a;
+      box-shadow: 
+        inset 0 0 20px rgba(0,0,0,0.9),
+        inset 0 0 5px rgba(0,0,0,0.6),
+        0 3px 10px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    .gauge.small .gauge-face,
+    .gauge.oil-center .gauge-face {
+      border-width: 2px;
+    }
+
+    /* SVG gauge container */
+    .gauge svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Tick marks */
+    .tick-major {
+      stroke: var(--tick-white);
+      stroke-width: 2.5;
+      stroke-linecap: butt;
+    }
+
+    .tick-minor {
+      stroke: var(--tick-white);
+      stroke-width: 1.2;
+      stroke-linecap: butt;
+    }
+
+    .tick-redline {
+      stroke: var(--redline-red) !important;
+    }
+
+    /* Gauge numbers */
+    .gauge-number {
+      font-family: 'GaugeFont', 'Arial Narrow', Arial, sans-serif;
+      font-weight: bold;
+      fill: var(--text-white);
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .gauge.large .gauge-number {
+      font-size: 20px;
+    }
+
+    .gauge.small .gauge-number {
+      font-size: 10px;
+    }
+
+    .gauge.oil-center .gauge-number {
+      font-size: 8px;
+    }
+
+    .number-redline {
+      fill: var(--redline-red) !important;
+    }
+
+    /* Unit labels */
+    .gauge-unit {
+      font-family: 'GaugeFont', 'Arial Narrow', Arial, sans-serif;
+      font-size: 9px;
+      fill: var(--text-dim);
+      text-anchor: middle;
+      letter-spacing: 0.5px;
+    }
+
+    .gauge.large .gauge-unit {
+      font-size: 11px;
+    }
+
+    /* Redline arc background */
+    .redline-zone {
+      fill: var(--redline-red);
+      opacity: 0.15;
+    }
+
+    /* Needle */
+    .needle {
+      transform-origin: center;
+      transition: transform 0.08s ease-out;
+    }
+
+    .needle-shape {
+      fill: var(--needle-orange);
+      filter: drop-shadow(0 0 4px var(--needle-shadow));
+    }
+
+    .needle-tip {
+      fill: #fff;
+    }
+
+    /* Center cap */
+    .center-cap {
+      fill: #2a2a2a;
+      stroke: #444;
+      stroke-width: 1;
+    }
+
+    .center-cap-inner {
+      fill: #1a1a1a;
+    }
+
+    /* Warning lights section - below gauges */
+    .warning-lights {
+      display: flex;
+      justify-content: center;
+      gap: 2vw;
+      margin-top: 2vh;
+      padding: 1vh 2vw;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+    }
+
+    .warning-light {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      opacity: 0.25;
+      transition: opacity 0.2s;
+    }
+
+    .warning-light.active {
+      opacity: 1;
+    }
+
+    .warning-light .icon {
+      width: min(3vh, 2.5vw);
+      height: min(3vh, 2.5vw);
+      min-width: 18px;
+      min-height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: min(1.5vh, 10px);
+      font-weight: bold;
+    }
+
+    .warning-light .icon.red {
+      background: var(--warning-red);
+      box-shadow: 0 0 8px var(--warning-red);
+      color: #fff;
+    }
+
+    .warning-light .icon.amber {
+      background: var(--warning-amber);
+      box-shadow: 0 0 8px var(--warning-amber);
+      color: #000;
+    }
+
+    .warning-light .icon.green {
+      background: #00aa00;
+      box-shadow: 0 0 8px #00aa00;
+      color: #fff;
+    }
+
+    .warning-light .icon.blue {
+      background: #0066ff;
+      box-shadow: 0 0 8px #0066ff;
+      color: #fff;
+    }
+
+    .warning-light .label {
+      font-size: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+    }
+
+    .warning-light.active .label {
+      color: var(--text-white);
+    }
+
+    /* Connection status - hidden by default */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 15px;
+      background: rgba(0,0,0,0.95);
+      border-top: 1px solid #333;
+      font-size: 9px;
+      color: var(--text-dim);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .status-bar:hover,
+    body:hover .status-bar {
+      transform: translateY(0);
+    }
+
+    /* Show status when mouse near bottom */
+    .status-trigger {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      z-index: 99;
+    }
+
+    .status-trigger:hover + .status-bar,
+    .status-bar:hover {
+      transform: translateY(0);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff0040;
+    }
+
+    .status-indicator.connected .status-dot {
+      background: #00ff00;
+      box-shadow: 0 0 6px #00ff00;
+    }
+
+    /* Small gauge specific styling */
+    .gauge.small .tick-major,
+    .gauge.oil-center .tick-major {
+      stroke-width: 1.8;
+    }
+
+    .gauge.small .tick-minor,
+    .gauge.oil-center .tick-minor {
+      stroke-width: 0.8;
+    }
+
+    /* Cold/Hot indicators */
+    .indicator-label {
+      font-size: 9px;
+      fill: var(--text-dim);
+      font-weight: bold;
+      text-anchor: middle;
+    }
+
+    .indicator-label.cold {
+      fill: #6699cc;
+    }
+
+    .indicator-label.hot {
+      fill: var(--redline-red);
+    }
+
+    /* Responsive - use viewport units for fullscreen */
+    @media (max-aspect-ratio: 4/3) {
+      /* Taller screens - constrain by width */
+      .gauge.large {
+        width: 26vw;
+        height: 26vw;
+      }
+      .gauge.small {
+        width: 11vw;
+        height: 11vw;
+      }
+      .gauge.oil-center {
+        width: 8.5vw;
+        height: 8.5vw;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .gauge-layout {
+        flex-wrap: wrap;
+        gap: 2vw;
+      }
+      .gauge.large {
+        width: 40vw;
+        height: 40vw;
+      }
+      .gauge.small {
+        width: 18vw;
+        height: 18vw;
+      }
+      .gauge.oil-center {
+        width: 15vw;
+        height: 15vw;
+      }
+      .center-column {
+        flex-direction: row;
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        gap: 3vw;
+      }
+      .warning-lights {
+        gap: 3vw;
+      }
+    }
+
+    /* Authentic green backlight glow effect */
+    .gauge-face::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 50%;
+      box-shadow: inset 0 0 30px rgba(58, 90, 58, 0.1);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hover triggers for auto-hide UI -->
+  <div class="nav-trigger"></div>
+
+  <!-- Theme Navigation -->
+  <nav class="theme-nav">
+    <a href="/">JDM</a>
+    <a href="/drift">DRIFT</a>
+    <a href="/drag">DRAG</a>
+    <a href="/ricer">RICER</a>
+    <a href="/fnf">F&F</a>
+    <a href="/ultimate">ULTIMATE</a>
+    <a href="/miata" class="active">MIATA</a>
+    <a href="/miata2">LAB</a>
+  </nav>
+
+  <div class="cluster-container">
+    <div class="cluster-housing">
+      <!-- 
+        Authentic 1995 NA Miata Layout:
+        [Fuel] [TACH] [Oil] [SPEEDO] [Temp]
+        Small   Large  Small  Large   Small
+      -->
+      <div class="gauge-layout">
+        
+        <!-- Fuel Gauge (far left small) -->
+        <div class="gauge small" id="fuel-gauge">
+          <div class="gauge-face"></div>
+          <svg viewBox="0 0 100 100">
+            <g id="fuel-ticks"></g>
+            <text x="28" y="68" class="indicator-label">E</text>
+            <text x="72" y="68" class="indicator-label">F</text>
+            <text x="50" y="28" class="gauge-unit" style="font-size:8px;font-weight:bold;">FUEL</text>
+            <g class="needle" id="fuel-needle">
+              <polygon class="needle-shape" points="50,22 47,50 50,53 53,50"/>
+              <polygon class="needle-tip" points="50,22 48,28 52,28"/>
+              <circle class="center-cap" cx="50" cy="50" r="7"/>
+              <circle class="center-cap-inner" cx="50" cy="50" r="4"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Tachometer (large left) - 0-9000 RPM, redline at 7000 -->
+        <div class="gauge large" id="tach-gauge">
+          <div class="gauge-face"></div>
+          <svg viewBox="0 0 200 200">
+            <!-- Redline zone background -->
+            <path id="tach-redline-zone" class="redline-zone" d=""/>
+            <!-- Tick marks -->
+            <g id="tach-ticks"></g>
+            <!-- Numbers -->
+            <g id="tach-numbers"></g>
+            <!-- Center labels -->
+            <text x="100" y="130" class="gauge-unit">RPM</text>
+            <text x="100" y="142" class="gauge-unit" style="font-size:7px;">×1000</text>
+            <!-- Needle -->
+            <g class="needle" id="tach-needle">
+              <polygon class="needle-shape" points="100,28 96,100 100,106 104,100"/>
+              <polygon class="needle-tip" points="100,28 97,38 103,38"/>
+              <circle class="center-cap" cx="100" cy="100" r="11"/>
+              <circle class="center-cap-inner" cx="100" cy="100" r="6"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Center column: Oil pressure gauge -->
+        <div class="center-column">
+          <!-- Oil Pressure Gauge (center, smaller) -->
+          <div class="gauge oil-center" id="oil-gauge">
+            <div class="gauge-face"></div>
+            <svg viewBox="0 0 100 100">
+              <g id="oil-ticks"></g>
+              <text x="30" y="65" class="indicator-label" style="font-size:8px;">L</text>
+              <text x="70" y="65" class="indicator-label" style="font-size:8px;">H</text>
+              <text x="50" y="30" class="gauge-unit" style="font-size:6px;font-weight:bold;">OIL</text>
+              <g class="needle" id="oil-needle">
+                <polygon class="needle-shape" points="50,25 48,50 50,52 52,50"/>
+                <polygon class="needle-tip" points="50,25 48.5,30 51.5,30"/>
+                <circle class="center-cap" cx="50" cy="50" r="6"/>
+                <circle class="center-cap-inner" cx="50" cy="50" r="3"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Speedometer (large right) - 0-140 MPH -->
+        <div class="gauge large" id="speedo-gauge">
+          <div class="gauge-face"></div>
+          <svg viewBox="0 0 200 200">
+            <!-- Tick marks -->
+            <g id="speedo-ticks"></g>
+            <!-- Numbers -->
+            <g id="speedo-numbers"></g>
+            <!-- Center label -->
+            <text x="100" y="130" class="gauge-unit">MPH</text>
+            <!-- Needle -->
+            <g class="needle" id="speedo-needle">
+              <polygon class="needle-shape" points="100,28 96,100 100,106 104,100"/>
+              <polygon class="needle-tip" points="100,28 97,38 103,38"/>
+              <circle class="center-cap" cx="100" cy="100" r="11"/>
+              <circle class="center-cap-inner" cx="100" cy="100" r="6"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Coolant Temperature Gauge (far right small) -->
+        <div class="gauge small" id="temp-gauge">
+          <div class="gauge-face"></div>
+          <svg viewBox="0 0 100 100">
+            <g id="temp-ticks"></g>
+            <text x="28" y="68" class="indicator-label cold">C</text>
+            <text x="72" y="68" class="indicator-label hot">H</text>
+            <text x="50" y="28" class="gauge-unit" style="font-size:8px;font-weight:bold;">TEMP</text>
+            <g class="needle" id="temp-needle">
+              <polygon class="needle-shape" points="50,22 47,50 50,53 53,50"/>
+              <polygon class="needle-tip" points="50,22 48,28 52,28"/>
+              <circle class="center-cap" cx="50" cy="50" r="7"/>
+              <circle class="center-cap-inner" cx="50" cy="50" r="4"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Warning lights - authentic position below gauges -->
+      <div class="warning-lights">
+        <div class="warning-light" id="light-airbag">
+          <div class="icon red">SRS</div>
+          <span class="label">Airbag</span>
+        </div>
+        <div class="warning-light" id="light-turn-left">
+          <div class="icon green">◀</div>
+          <span class="label">Left</span>
+        </div>
+        <div class="warning-light" id="light-high-beam">
+          <div class="icon blue">⚡</div>
+          <span class="label">High</span>
+        </div>
+        <div class="warning-light" id="light-turn-right">
+          <div class="icon green">▶</div>
+          <span class="label">Right</span>
+        </div>
+        <div class="warning-light" id="light-check-engine">
+          <div class="icon amber">⚠</div>
+          <span class="label">Check</span>
+        </div>
+        <div class="warning-light" id="light-oil">
+          <div class="icon red">OIL</div>
+          <span class="label">Oil</span>
+        </div>
+        <div class="warning-light" id="light-battery">
+          <div class="icon red">BAT</div>
+          <span class="label">Batt</span>
+        </div>
+        <div class="warning-light" id="light-temp">
+          <div class="icon red">🌡</div>
+          <span class="label">Temp</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status trigger and bar -->
+  <div class="status-trigger"></div>
+  <div class="status-bar">
+    <div class="status-indicator" id="status">
+      <div class="status-dot"></div>
+      <span id="status-text">Disconnected</span>
+    </div>
+    <span id="poll-time">Last update: ---</span>
+    <span id="signature">---</span>
+  </div>
+
+  <script>
+    // ============================================================================
+    // GAUGE CONFIGURATION - Authentic 1995 NA Miata Specifications
+    // ============================================================================
+    
+    const TACH_CONFIG = {
+      min: 0,
+      max: 9000,           // NA Miata tach goes to 9000
+      redlineStart: 7000,  // Redline begins at 7000 RPM
+      startAngle: -135,    // 7 o'clock position (stock)
+      endAngle: 135,       // 5 o'clock position
+      majorTicks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      minorTicksPerMajor: 5  // Every 200 RPM
+    };
+
+    const SPEEDO_CONFIG = {
+      min: 0,
+      max: 140,            // USDM version: 140 MPH
+      startAngle: -135,    // 7 o'clock position (stock)
+      endAngle: 135,       // 5 o'clock position
+      majorTicks: [0, 20, 40, 60, 80, 100, 120, 140],
+      minorTicksPerMajor: 4  // Every 5 MPH
+    };
+
+    const TEMP_CONFIG = {
+      min: 100,            // Cold
+      max: 260,            // Hot (°F)
+      normalLow: 180,
+      normalHigh: 210,
+      startAngle: -50,
+      endAngle: 50
+    };
+
+    const FUEL_CONFIG = {
+      min: 0,
+      max: 100,
+      startAngle: -50,
+      endAngle: 50
+    };
+
+    const OIL_CONFIG = {
+      min: 0,
+      max: 80,             // PSI (true pressure gauge on NA)
+      startAngle: -50,
+      endAngle: 50
+    };
+
+    // ============================================================================
+    // GAUGE DRAWING FUNCTIONS
+    // ============================================================================
+
+    function polarToCartesian(cx, cy, r, angleDeg) {
+      const angleRad = (angleDeg - 90) * Math.PI / 180;
+      return {
+        x: cx + r * Math.cos(angleRad),
+        y: cy + r * Math.sin(angleRad)
+      };
+    }
+
+    function describeArc(cx, cy, r, startAngle, endAngle) {
+      const start = polarToCartesian(cx, cy, r, endAngle);
+      const end = polarToCartesian(cx, cy, r, startAngle);
+      const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+      return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+    }
+
+    function describeWedge(cx, cy, innerR, outerR, startAngle, endAngle) {
+      const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
+      const innerEnd = polarToCartesian(cx, cy, innerR, endAngle);
+      const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+      const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
+      const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+      
+      return `M ${innerStart.x} ${innerStart.y} 
+              L ${outerStart.x} ${outerStart.y} 
+              A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}
+              L ${innerEnd.x} ${innerEnd.y}
+              A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y} Z`;
+    }
+
+    function drawTachometer() {
+      const ticksGroup = document.getElementById('tach-ticks');
+      const numbersGroup = document.getElementById('tach-numbers');
+      const redlineZone = document.getElementById('tach-redline-zone');
+      
+      const cx = 100, cy = 100;
+      const outerR = 88;
+      const majorTickR = 75;
+      const minorTickR = 82;
+      const numberR = 62;
+      
+      // Draw redline zone (7000-9000 RPM)
+      const redlineStartAngle = TACH_CONFIG.startAngle + 
+        ((TACH_CONFIG.redlineStart - TACH_CONFIG.min) / (TACH_CONFIG.max - TACH_CONFIG.min)) * 
+        (TACH_CONFIG.endAngle - TACH_CONFIG.startAngle);
+      redlineZone.setAttribute('d', describeWedge(cx, cy, majorTickR - 5, outerR, redlineStartAngle, TACH_CONFIG.endAngle));
+
+      // Draw ticks and numbers
+      for (let i = 0; i <= 9; i++) {
+        const value = i * 1000;
+        const angle = TACH_CONFIG.startAngle + 
+          (value / TACH_CONFIG.max) * (TACH_CONFIG.endAngle - TACH_CONFIG.startAngle);
+        
+        // Major tick
+        const outer = polarToCartesian(cx, cy, outerR, angle);
+        const inner = polarToCartesian(cx, cy, majorTickR, angle);
+        
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', outer.x);
+        tick.setAttribute('y1', outer.y);
+        tick.setAttribute('x2', inner.x);
+        tick.setAttribute('y2', inner.y);
+        tick.setAttribute('class', value >= TACH_CONFIG.redlineStart ? 'tick-major tick-redline' : 'tick-major');
+        ticksGroup.appendChild(tick);
+        
+        // Number
+        const numPos = polarToCartesian(cx, cy, numberR, angle);
+        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', numPos.x);
+        num.setAttribute('y', numPos.y);
+        num.setAttribute('class', value >= TACH_CONFIG.redlineStart ? 'gauge-number number-redline' : 'gauge-number');
+        num.textContent = i;
+        numbersGroup.appendChild(num);
+        
+        // Minor ticks between major (every 200 RPM)
+        if (i < 9) {
+          for (let j = 1; j < TACH_CONFIG.minorTicksPerMajor; j++) {
+            const minorValue = value + (j * 1000 / TACH_CONFIG.minorTicksPerMajor);
+            const minorAngle = TACH_CONFIG.startAngle + 
+              (minorValue / TACH_CONFIG.max) * (TACH_CONFIG.endAngle - TACH_CONFIG.startAngle);
+            
+            const minorOuter = polarToCartesian(cx, cy, outerR, minorAngle);
+            const minorInner = polarToCartesian(cx, cy, minorTickR, minorAngle);
+            
+            const minorTick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            minorTick.setAttribute('x1', minorOuter.x);
+            minorTick.setAttribute('y1', minorOuter.y);
+            minorTick.setAttribute('x2', minorInner.x);
+            minorTick.setAttribute('y2', minorInner.y);
+            minorTick.setAttribute('class', minorValue >= TACH_CONFIG.redlineStart ? 'tick-minor tick-redline' : 'tick-minor');
+            ticksGroup.appendChild(minorTick);
+          }
+        }
+      }
+    }
+
+    function drawSpeedometer() {
+      const ticksGroup = document.getElementById('speedo-ticks');
+      const numbersGroup = document.getElementById('speedo-numbers');
+      
+      const cx = 100, cy = 100;
+      const outerR = 88;
+      const majorTickR = 75;
+      const minorTickR = 82;
+      const numberR = 62;
+      
+      // Draw major ticks and numbers
+      SPEEDO_CONFIG.majorTicks.forEach((value, i) => {
+        const angle = SPEEDO_CONFIG.startAngle + 
+          (value / SPEEDO_CONFIG.max) * (SPEEDO_CONFIG.endAngle - SPEEDO_CONFIG.startAngle);
+        
+        const outer = polarToCartesian(cx, cy, outerR, angle);
+        const inner = polarToCartesian(cx, cy, majorTickR, angle);
+        
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', outer.x);
+        tick.setAttribute('y1', outer.y);
+        tick.setAttribute('x2', inner.x);
+        tick.setAttribute('y2', inner.y);
+        tick.setAttribute('class', 'tick-major');
+        ticksGroup.appendChild(tick);
+        
+        const numPos = polarToCartesian(cx, cy, numberR, angle);
+        const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', numPos.x);
+        num.setAttribute('y', numPos.y);
+        num.setAttribute('class', 'gauge-number');
+        num.textContent = value;
+        numbersGroup.appendChild(num);
+        
+        // Minor ticks (every 5 MPH)
+        if (i < SPEEDO_CONFIG.majorTicks.length - 1) {
+          const nextValue = SPEEDO_CONFIG.majorTicks[i + 1];
+          const step = (nextValue - value) / SPEEDO_CONFIG.minorTicksPerMajor;
+          
+          for (let j = 1; j < SPEEDO_CONFIG.minorTicksPerMajor; j++) {
+            const minorValue = value + (j * step);
+            const minorAngle = SPEEDO_CONFIG.startAngle + 
+              (minorValue / SPEEDO_CONFIG.max) * (SPEEDO_CONFIG.endAngle - SPEEDO_CONFIG.startAngle);
+            
+            const minorOuter = polarToCartesian(cx, cy, outerR, minorAngle);
+            const minorInner = polarToCartesian(cx, cy, minorTickR, minorAngle);
+            
+            const minorTick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            minorTick.setAttribute('x1', minorOuter.x);
+            minorTick.setAttribute('y1', minorOuter.y);
+            minorTick.setAttribute('x2', minorInner.x);
+            minorTick.setAttribute('y2', minorInner.y);
+            minorTick.setAttribute('class', 'tick-minor');
+            ticksGroup.appendChild(minorTick);
+          }
+        }
+      });
+    }
+
+    function drawSmallGauge(gaugeId, config) {
+      const ticksGroup = document.getElementById(gaugeId + '-ticks');
+      if (!ticksGroup) return;
+      
+      const cx = 50, cy = 50;
+      const outerR = 42;
+      const majorR = 35;
+      const minorR = 38;
+      
+      // Draw end ticks and center tick
+      const positions = [-1, 0, 1]; // Left, center, right
+      
+      positions.forEach((pos, i) => {
+        const angle = config.startAngle + ((pos + 1) / 2) * (config.endAngle - config.startAngle);
+        const outer = polarToCartesian(cx, cy, outerR, angle);
+        const inner = polarToCartesian(cx, cy, majorR, angle);
+        
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', outer.x);
+        tick.setAttribute('y1', outer.y);
+        tick.setAttribute('x2', inner.x);
+        tick.setAttribute('y2', inner.y);
+        tick.setAttribute('class', 'tick-major');
+        ticksGroup.appendChild(tick);
+      });
+      
+      // Add minor ticks
+      for (let i = 1; i <= 5; i++) {
+        if (i === 3) continue; // Skip center
+        const frac = i / 6;
+        const angle = config.startAngle + frac * (config.endAngle - config.startAngle);
+        const outer = polarToCartesian(cx, cy, outerR, angle);
+        const inner = polarToCartesian(cx, cy, minorR, angle);
+        
+        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        tick.setAttribute('x1', outer.x);
+        tick.setAttribute('y1', outer.y);
+        tick.setAttribute('x2', inner.x);
+        tick.setAttribute('y2', inner.y);
+        tick.setAttribute('class', 'tick-minor');
+        ticksGroup.appendChild(tick);
+      }
+    }
+
+    // ============================================================================
+    // NEEDLE UPDATE FUNCTIONS
+    // ============================================================================
+
+    function setNeedleAngle(needleId, angle) {
+      const needle = document.getElementById(needleId);
+      if (needle) {
+        needle.style.transform = `rotate(${angle}deg)`;
+      }
+    }
+
+    function updateTachometer(rpm) {
+      const clampedRpm = Math.max(TACH_CONFIG.min, Math.min(TACH_CONFIG.max, rpm));
+      const angle = TACH_CONFIG.startAngle + 
+        ((clampedRpm - TACH_CONFIG.min) / (TACH_CONFIG.max - TACH_CONFIG.min)) * 
+        (TACH_CONFIG.endAngle - TACH_CONFIG.startAngle);
+      setNeedleAngle('tach-needle', angle);
+    }
+
+    function updateSpeedometer(mph) {
+      const clampedMph = Math.max(SPEEDO_CONFIG.min, Math.min(SPEEDO_CONFIG.max, mph));
+      const angle = SPEEDO_CONFIG.startAngle + 
+        ((clampedMph - SPEEDO_CONFIG.min) / (SPEEDO_CONFIG.max - SPEEDO_CONFIG.min)) * 
+        (SPEEDO_CONFIG.endAngle - SPEEDO_CONFIG.startAngle);
+      setNeedleAngle('speedo-needle', angle);
+    }
+
+    function updateTempGauge(tempF) {
+      const clampedTemp = Math.max(TEMP_CONFIG.min, Math.min(TEMP_CONFIG.max, tempF));
+      const angle = TEMP_CONFIG.startAngle + 
+        ((clampedTemp - TEMP_CONFIG.min) / (TEMP_CONFIG.max - TEMP_CONFIG.min)) * 
+        (TEMP_CONFIG.endAngle - TEMP_CONFIG.startAngle);
+      setNeedleAngle('temp-needle', angle);
+      
+      // Warning light for overheating
+      const tempLight = document.getElementById('light-temp');
+      if (tempLight) {
+        tempLight.classList.toggle('active', tempF >= 230);
+      }
+    }
+
+    function updateFuelGauge(percent) {
+      const clampedFuel = Math.max(FUEL_CONFIG.min, Math.min(FUEL_CONFIG.max, percent));
+      const angle = FUEL_CONFIG.startAngle + 
+        ((clampedFuel - FUEL_CONFIG.min) / (FUEL_CONFIG.max - FUEL_CONFIG.min)) * 
+        (FUEL_CONFIG.endAngle - FUEL_CONFIG.startAngle);
+      setNeedleAngle('fuel-needle', angle);
+    }
+
+    function updateOilGauge(psi) {
+      const clampedOil = Math.max(OIL_CONFIG.min, Math.min(OIL_CONFIG.max, psi));
+      const angle = OIL_CONFIG.startAngle + 
+        ((clampedOil - OIL_CONFIG.min) / (OIL_CONFIG.max - OIL_CONFIG.min)) * 
+        (OIL_CONFIG.endAngle - OIL_CONFIG.startAngle);
+      setNeedleAngle('oil-needle', angle);
+      
+      // Warning light for low oil pressure
+      const oilLight = document.getElementById('light-oil');
+      if (oilLight) {
+        oilLight.classList.toggle('active', psi <= 10);
+      }
+    }
+
+    // ============================================================================
+    // DATA POLLING
+    // ============================================================================
+
+    const FIELDS = ['rpm', 'coolant', 'batteryVoltage', 'map', 'tps'];
+    let connected = false;
+
+    async function poll() {
+      try {
+        const url = `/api/values?fields=${FIELDS.join(',')}`;
+        const res = await fetch(url);
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        
+        if (!connected) {
+          const statusRes = await fetch('/api/status');
+          const status = await statusRes.json();
+          setConnected(true, status.signature || 'MS2');
+        }
+        
+        if (data.values) {
+          const valueMap = {};
+          data.values.forEach(v => { valueMap[v.name] = v.value; });
+          processData(valueMap);
+        }
+        
+        const timeEl = document.getElementById('poll-time');
+        if (timeEl) {
+          timeEl.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+        }
+        
+      } catch (err) {
+        if (connected) console.error('Poll error:', err);
+        setConnected(false);
+      }
+    }
+
+    function processData(data) {
+      // Update tachometer from RPM
+      if (data.rpm !== undefined) {
+        updateTachometer(data.rpm);
+      }
+      
+      // Update temperature gauge from coolant
+      if (data.coolant !== undefined) {
+        updateTempGauge(data.coolant);
+      }
+      
+      // Battery warning light
+      if (data.batteryVoltage !== undefined) {
+        const batteryLight = document.getElementById('light-battery');
+        if (batteryLight) {
+          batteryLight.classList.toggle('active', data.batteryVoltage < 12.0);
+        }
+      }
+      
+      // Calculate approximate speed from RPM (rough estimate without wheel speed sensor)
+      // NA Miata: 4.1 final drive, ~205/50R15 tires, assuming ~3rd gear for demo
+      if (data.rpm !== undefined) {
+        const tireCircumference = 1.935; // meters
+        const finalDrive = 4.1;
+        const gearRatio = 1.3; // Rough average
+        const metersPerMinute = (data.rpm / (finalDrive * gearRatio)) * tireCircumference;
+        const mph = metersPerMinute * 60 / 1609.34;
+        updateSpeedometer(Math.min(mph * 0.6, 140)); // Scale down for display
+      }
+      
+      // Fuel and oil are not driven by ECU data per user request
+      // Set to reasonable static values
+      updateFuelGauge(55);  // ~half tank
+      updateOilGauge(42);   // Normal operating pressure
+    }
+
+    function setConnected(isConnected, signature = '') {
+      connected = isConnected;
+      const statusEl = document.getElementById('status');
+      const statusText = document.getElementById('status-text');
+      const sigEl = document.getElementById('signature');
+      
+      if (statusEl) statusEl.classList.toggle('connected', isConnected);
+      if (statusText) statusText.textContent = isConnected ? 'Connected' : 'Disconnected';
+      if (sigEl && signature) sigEl.textContent = signature;
+    }
+
+    // ============================================================================
+    // INITIALIZATION
+    // ============================================================================
+
+    function init() {
+      // Draw all gauges
+      drawTachometer();
+      drawSpeedometer();
+      drawSmallGauge('temp', TEMP_CONFIG);
+      drawSmallGauge('fuel', FUEL_CONFIG);
+      drawSmallGauge('oil', OIL_CONFIG);
+      
+      // Set initial needle positions (zero/cold)
+      updateTachometer(0);
+      updateSpeedometer(0);
+      updateTempGauge(TEMP_CONFIG.min);
+      updateFuelGauge(55);
+      updateOilGauge(42);
+      
+      // Start polling at 10 Hz for smooth needle movement
+      setInterval(poll, 100);
+      poll();
+    }
+
+    // Start when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
