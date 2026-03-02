@@ -5,7 +5,7 @@
 
 /**
  * Extract integer value from OUTPC buffer based on data type
- * Handles little-endian byte order for multi-byte values
+ * Handles big-endian byte order for multi-byte values (Megasquirt protocol)
  */
 static int32_t extract_raw_value(const uint8_t *buffer, size_t buffer_len, 
                                   const ms2d_field_t *field) {
@@ -21,11 +21,11 @@ static int32_t extract_raw_value(const uint8_t *buffer, size_t buffer_len,
         if ((size_t)(offset + 4) > buffer_len) {
             return 0;
         }
-        // Read as U32 little-endian
-        uint32_t val = buffer[offset] | 
-                       (buffer[offset+1] << 8) | 
-                       (buffer[offset+2] << 16) | 
-                       (buffer[offset+3] << 24);
+        // Read as U32 big-endian
+        uint32_t val = (buffer[offset] << 24) |
+                       (buffer[offset+1] << 16) |
+                       (buffer[offset+2] << 8) |
+                       buffer[offset+3];
         return (int32_t)val;
     }
     
@@ -34,7 +34,7 @@ static int32_t extract_raw_value(const uint8_t *buffer, size_t buffer_len,
         return 0;
     }
     
-    // Extract based on type (little-endian)
+    // Extract based on type (big-endian, Megasquirt protocol)
     switch (type) {
         case MS2D_TYPE_U08:
             return buffer[offset];
@@ -43,28 +43,28 @@ static int32_t extract_raw_value(const uint8_t *buffer, size_t buffer_len,
             return (int8_t)buffer[offset];
             
         case MS2D_TYPE_U16: {
-            uint16_t val = buffer[offset] | (buffer[offset+1] << 8);
+            uint16_t val = (buffer[offset] << 8) | buffer[offset+1];
             return val;
         }
             
         case MS2D_TYPE_S16: {
-            uint16_t raw = buffer[offset] | (buffer[offset+1] << 8);
+            uint16_t raw = (buffer[offset] << 8) | buffer[offset+1];
             return (int16_t)raw;
         }
             
         case MS2D_TYPE_U32: {
-            uint32_t val = buffer[offset] | 
-                          (buffer[offset+1] << 8) | 
-                          (buffer[offset+2] << 16) | 
-                          (buffer[offset+3] << 24);
+            uint32_t val = (buffer[offset] << 24) |
+                          (buffer[offset+1] << 16) |
+                          (buffer[offset+2] << 8) |
+                          buffer[offset+3];
             return (int32_t)val;  // Cast to signed for consistency
         }
             
         case MS2D_TYPE_S32: {
-            uint32_t raw = buffer[offset] | 
-                          (buffer[offset+1] << 8) | 
-                          (buffer[offset+2] << 16) | 
-                          (buffer[offset+3] << 24);
+            uint32_t raw = (buffer[offset] << 24) |
+                          (buffer[offset+1] << 16) |
+                          (buffer[offset+2] << 8) |
+                          buffer[offset+3];
             return (int32_t)raw;
         }
             

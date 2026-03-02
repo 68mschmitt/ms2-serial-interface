@@ -17,11 +17,11 @@ void test_decode_rpm(void) {
     ms2d_state_t state = {0};
     
     // Create OUTPC buffer with RPM at offset 6
-    // RPM = 2500 in little-endian U16: 0xC4 0x09
-    // 2500 = 0x09C4 = (196 + 9*256)
+    // RPM = 2500 in big-endian U16: 0x09 0xC4
+    // 2500 = 0x09C4
     uint8_t buffer[256] = {0};
-    buffer[6] = 0xC4;  // Low byte
-    buffer[7] = 0x09;  // High byte
+    buffer[6] = 0x09;  // High byte
+    buffer[7] = 0xC4;  // Low byte
     
     state.outpc_buffer = buffer;
     state.outpc_len = sizeof(buffer);
@@ -58,10 +58,10 @@ void test_decode_battery(void) {
     
     // Create OUTPC buffer with battery voltage at offset 26
     // Battery = 14.1V, encoded as 141 (0x8D) with scale 0.1
-    // 141 in little-endian S16: 0x8D 0x00
+    // 141 in big-endian S16: 0x00 0x8D
     uint8_t buffer[256] = {0};
-    buffer[26] = 0x8D;  // 141 low byte
-    buffer[27] = 0x00;  // 141 high byte
+    buffer[26] = 0x00;  // 141 high byte
+    buffer[27] = 0x8D;  // 141 low byte
     
     state.outpc_buffer = buffer;
     state.outpc_len = sizeof(buffer);
@@ -139,12 +139,12 @@ void test_decode_all(void) {
     // Create state with fields and buffer
     ms2d_state_t state = {0};
     
-    // Create buffer with known values
+    // Create buffer with known values (big-endian)
     uint8_t buffer[256] = {0};
-    buffer[6] = 0xC4;  // rpm = 2500
-    buffer[7] = 0x09;
-    buffer[26] = 0x8D; // battery = 14.1
-    buffer[27] = 0x00;
+    buffer[6] = 0x09;  // rpm = 2500 (high byte)
+    buffer[7] = 0xC4;  // rpm = 2500 (low byte)
+    buffer[26] = 0x00; // battery = 14.1 (high byte)
+    buffer[27] = 0x8D; // battery = 14.1 (low byte)
     
     state.outpc_buffer = buffer;
     state.outpc_len = sizeof(buffer);
@@ -230,11 +230,11 @@ void test_data_types(void) {
     printf("  S08: 0xFF -> %.0f ", s08_val);
     if (s08_val == -1.0) printf("✓\n"); else { printf("✗\n"); exit(1); }
     
-    // Test U32 - little endian: 0x12345678 = bytes[0x78, 0x56, 0x34, 0x12]
-    buffer[10] = 0x78;  // Low byte
-    buffer[11] = 0x56;
-    buffer[12] = 0x34;
-    buffer[13] = 0x12;  // High byte
+    // Test U32 - big endian: 0x12345678 = bytes[0x12, 0x34, 0x56, 0x78]
+    buffer[10] = 0x12;  // High byte
+    buffer[11] = 0x34;
+    buffer[12] = 0x56;
+    buffer[13] = 0x78;  // Low byte
     ms2d_field_t u32_field = {.type = MS2D_TYPE_U32, .offset = 10, .scale = 1.0, .translate = 0.0};
     double u32_val = ms2d_decode_field(&state, &u32_field);
     printf("  U32: 0x12345678 -> %.0f ", u32_val);
