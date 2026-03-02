@@ -63,7 +63,7 @@ class FieldDef:
             "S32": "i",
         }
         fmt = formats.get(self.data_type, "H")
-        return "<" + fmt  # Little-endian
+        return ">" + fmt  # Big-endian (Megasquirt protocol)
 
 
 @dataclass

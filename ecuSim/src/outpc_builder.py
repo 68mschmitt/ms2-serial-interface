@@ -20,16 +20,20 @@ except ImportError:
 class OUTPCBuilder:
     """Builds OUTPC data block from engine state."""
 
-    def __init__(self, config: INIConfig, state: EngineState):
+    def __init__(self, config: INIConfig, state: EngineState, debug_values: bool = False):
         self.config = config
         self.state = state
-
+        self.debug_values = debug_values
+        self._debug_counter = 0
+        self._last_debug_print = 0.0
     def build(self) -> bytes:
         """Build the complete OUTPC data block."""
         buffer = bytearray(self.config.och_block_size)
 
-        # Map engine state to field values
-        field_values = self._get_field_values()
+        if self.debug_values:
+            field_values = self._get_debug_values()
+        else:
+            field_values = self._get_field_values()
 
         # Encode each field
         for name, value in field_values.items():
@@ -197,6 +201,55 @@ class OUTPCBuilder:
             "adc7": 0.0,
         }
 
+    def _get_debug_values(self) -> dict[str, float]:
+        """Get incrementing debug values for all output channels."""
+        import time
+
+        values = {}
+        base_value = self._debug_counter
+
+        # Sort channels by offset for consistent ordering
+        sorted_channels = sorted(
+            self.config.output_channels.items(),
+            key=lambda x: x[1].offset
+        )
+
+        for i, (name, field) in enumerate(sorted_channels):
+            # Use incrementing value based on field index + counter
+            # Scale value to fit within the field's typical range
+            value = float((base_value + i) % 256)
+            values[name] = value
+
+        # Print debug output periodically (every ~2 seconds)
+        now = time.time()
+        if now - self._last_debug_print >= 2.0:
+            self._print_debug_values(values, sorted_channels)
+            self._last_debug_print = now
+
+        self._debug_counter = (self._debug_counter + 1) % 256
+        return values
+
+    def _print_debug_values(self, values: dict[str, float], sorted_channels: list):
+        """Print debug values for matching with TunerStudio."""
+        print("\n" + "=" * 70)
+        print(f"DEBUG VALUES (counter={self._debug_counter})")
+        print("=" * 70)
+        print(f"{'Field':<25} {'Offset':<8} {'Type':<6} {'Value':<10} {'Raw':<10}")
+        print("-" * 70)
+
+        for name, field in sorted_channels[:20]:  # Show first 20 fields
+            value = values[name]
+            # Calculate raw value
+            if field.scale != 0:
+                raw = int((value - field.translate) / field.scale)
+            else:
+                raw = int(value)
+            print(f"{name:<25} {field.offset:<8} {field.data_type:<6} {value:<10.1f} {raw:<10}")
+
+        print("-" * 70)
+        print("(Showing first 20 fields by offset)")
+        print("=" * 70)
+
     def _encode_field(self, buffer: bytearray, field: FieldDef, value: float):
         """Encode a value into the buffer at the field's offset."""
         if field.offset + field.size > len(buffer):
@@ -206,9 +259,10 @@ class OUTPCBuilder:
         if field.field_type == "bits" and field.bit_range is None:
             return
 
-        # Reverse the decode formula: msValue = userValue / scale - translate
+        # Reverse the decode formula: displayValue = rawBytes * scale + translate
+        # So: rawBytes = (displayValue - translate) / scale
         if field.scale != 0:
-            raw = (value / field.scale) - field.translate
+            raw = (value - field.translate) / field.scale
         else:
             raw = value
 

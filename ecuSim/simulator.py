@@ -64,12 +64,14 @@ class ECUSimulator:
         link_path: str = "/tmp/ecuSim",
         update_hz: float = 50,
         pages_file: Path | None = None,
+        debug_values: bool = False,
     ):
         self.ini_config = ini_config
         self.page_builder = page_builder
         self.link_path = link_path
         self.update_hz = update_hz
         self.pages_file = pages_file
+        self.debug_values = debug_values
 
         # Initialize engine state
         self.state = EngineState()
@@ -83,7 +85,7 @@ class ECUSimulator:
         self.protocol = SerialProtocol(proto_config)
 
         # Initialize OUTPC builder
-        self.outpc_builder = OUTPCBuilder(ini_config, self.state)
+        self.outpc_builder = OUTPCBuilder(ini_config, self.state, debug_values=debug_values)
         self.protocol.set_outpc_builder(self.outpc_builder.build)
 
         # Initialize page data from multiple sources (priority order):
@@ -437,6 +439,12 @@ Examples:
         help="Path to pages file for persistence (loads on start, saves on exit)",
     )
 
+    parser.add_argument(
+        "--debug-values",
+        action="store_true",
+        help="Output incrementing debug values instead of simulated engine data (for testing decode)",
+    )
+
     args = parser.parse_args()
 
     # Load INI configuration and tune data
@@ -451,12 +459,14 @@ Examples:
 
     # Create and start simulator
     pages_file = Path(args.pages) if args.pages else None
+    debug_values = getattr(args, 'debug_values', False)
     simulator = ECUSimulator(
         ini_config=ini_config,
         page_builder=page_builder,
         link_path=args.link,
         update_hz=args.hz,
         pages_file=pages_file,
+        debug_values=debug_values,
     )
 
     simulator.start()
