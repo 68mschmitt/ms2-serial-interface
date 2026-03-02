@@ -28,6 +28,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+import termios
 
 
 # =============================================================================
@@ -423,44 +424,83 @@ def build_response(flag: int, payload: bytes) -> bytes:
     return struct.pack(">H", len(data)) + data + struct.pack(">I", crc32_ms(data))
 
 
-def read_request(fd: int, timeout: float = 1.0) -> bytes | None:
-    """Read a newserial request from file descriptor."""
+def read_framed_request(fd: int, buffer: bytes, timeout: float = 1.0) -> tuple[bytes | None, bytes]:
+    """
+    Read a newserial framed request from file descriptor.
+    
+    Args:
+        fd: File descriptor to read from
+        buffer: Existing buffer with any partial data
+        timeout: Read timeout in seconds
+    
+    Returns:
+        Tuple of (payload or None, remaining buffer bytes)
+    """
     import select
 
-    # Wait for data
-    ready, _, _ = select.select([fd], [], [], timeout)
-    if not ready:
-        return None
+    # Need at least 2 bytes for size header
+    if len(buffer) < 2:
+        ready, _, _ = select.select([fd], [], [], timeout)
+        if ready:
+            try:
+                buffer += os.read(fd, 1024)
+            except OSError:
+                return None, buffer
 
-    # Read size header
-    try:
-        size_bytes = os.read(fd, 2)
-        if len(size_bytes) < 2:
-            return None
-        size = struct.unpack(">H", size_bytes)[0]
+    if len(buffer) < 2:
+        return None, buffer
 
-        # Read payload
-        payload = b""
-        while len(payload) < size:
-            chunk = os.read(fd, size - len(payload))
-            if not chunk:
+    size = struct.unpack(">H", buffer[:2])[0]
+
+    if size == 0 or size > 1024:
+        # Invalid size, skip this byte
+        return None, buffer[1:]
+
+    # Need size + 2 (header) + 4 (crc) bytes total
+    total_needed = 2 + size + 4
+
+    # Read more if needed
+    attempts = 0
+    while len(buffer) < total_needed and attempts < 50:
+        ready, _, _ = select.select([fd], [], [], 0.1)
+        if ready:
+            try:
+                chunk = os.read(fd, total_needed - len(buffer))
+                if chunk:
+                    buffer += chunk
+            except OSError:
                 break
-            payload += chunk
+        attempts += 1
 
-        # Read CRC
-        crc_bytes = os.read(fd, 4)
-        if len(crc_bytes) < 4:
-            return None
+    if len(buffer) < total_needed:
+        return None, buffer
 
-        crc_rx = struct.unpack(">I", crc_bytes)[0]
-        if crc_rx != crc32_ms(payload):
-            print(f"  [!] CRC mismatch", file=sys.stderr)
-            return None
+    # Extract and verify
+    payload = buffer[2:2 + size]
+    crc_bytes = buffer[2 + size:2 + size + 4]
+    remaining = buffer[total_needed:]
 
-        return payload
-    except OSError:
-        return None
+    crc_rx = struct.unpack(">I", crc_bytes)[0]
+    if crc_rx != crc32_ms(payload):
+        print(f"  [!] CRC mismatch", file=sys.stderr)
+        return None, remaining
 
+    return payload, remaining
+
+
+def configure_pty_as_serial(fd: int) -> None:
+    """
+    Configure a PTY to behave like a raw serial port.
+    This is critical for TunerStudio/JSSC compatibility.
+    """
+    attrs = termios.tcgetattr(fd)
+    attrs[0] = 0  # iflag: no input processing
+    attrs[1] = 0  # oflag: no output processing
+    attrs[2] = termios.CS8 | termios.CREAD | termios.CLOCAL
+    attrs[3] = 0  # lflag: raw mode (no echo, no canonical)
+    attrs[6][termios.VMIN] = 1
+    attrs[6][termios.VTIME] = 0
+    termios.tcsetattr(fd, termios.TCSANOW, attrs)
 
 # =============================================================================
 # Main Simulator
@@ -479,6 +519,14 @@ def run_simulator(ini_path: Path, link_path: str, update_hz: float = 50):
     master_fd, slave_fd = pty.openpty()
     slave_path = os.ttyname(slave_fd)
     print(f"\nVirtual serial port created: {slave_path}")
+
+    # Configure PTY as raw serial port (critical for JSSC/TunerStudio)
+    try:
+        configure_pty_as_serial(master_fd)
+        configure_pty_as_serial(slave_fd)
+        print("  PTY configured in raw mode")
+    except termios.error as e:
+        print(f"  Warning: Could not configure PTY: {e}")
 
     # Create symlink for easier access
     link = Path(link_path)
@@ -501,32 +549,90 @@ def run_simulator(ini_path: Path, link_path: str, update_hz: float = 50):
     # Stats
     request_count = 0
     last_stats = time.time()
+    read_buffer = b""  # Buffer for handling partial reads and unframed commands
 
     try:
         while True:
+            import select
+            
             # Update engine simulation
             now = time.time()
             dt = now - last_update
             last_update = now
             state.update(dt)
 
-            # Check for incoming request
-            request = read_request(master_fd, timeout=0.02)
+            # Check for incoming data
+            ready, _, _ = select.select([master_fd], [], [], 0.02)
+            if ready:
+                try:
+                    raw_data = os.read(master_fd, 1024)
+                    if raw_data:
+                        read_buffer += raw_data
+                except OSError:
+                    pass
 
-            if request:
+            # Process buffer
+            while read_buffer:
+                # Check for unframed 'F' (protocol version query) - single byte 0x46
+                if read_buffer[0:1] == b'F':
+                    # Respond with unframed "002" (protocol version 2)
+                    os.write(master_fd, b'002')
+                    print("  [F] Protocol version query -> '002' (unframed)")
+                    request_count += 1
+                    read_buffer = read_buffer[1:]
+                    continue
+
+                # Try to parse as framed newserial request
+                request, read_buffer = read_framed_request(master_fd, read_buffer, timeout=0.02)
+                if request is None:
+                    # Not enough data for a complete frame, wait for more
+                    break
+
                 request_count += 1
-                cmd = chr(request[0]) if request else "?"
 
                 if request == b"Q":
-                    # Signature query
+                    # Signature query (simple protocol)
                     response = build_response(0x00, signature.encode() + b"\x00")
                     os.write(master_fd, response)
 
                 elif request == b"A":
-                    # Realtime data request
+                    # Realtime data request (simple protocol)
                     outpc = build_outpc(state, fields, block_size)
                     response = build_response(0x01, outpc)
                     os.write(master_fd, response)
+
+                elif request[0:1] == b"r" and len(request) >= 7:
+                    # CAN-style read command: r + canId + table + offset(2) + count(2)
+                    table = request[2]
+                    offset = struct.unpack(">H", request[3:5])[0]
+                    count = struct.unpack(">H", request[5:7])[0]
+                    
+                    if table == 0x0F:  # Signature query
+                        sig_data = (signature.encode() + b"\x00").ljust(20, b"\x00")
+                        response = build_response(0x00, sig_data[offset:offset+count])
+                        os.write(master_fd, response)
+                    elif table == 0x0E:  # Version info
+                        ver_data = (signature.encode() + b"\x00").ljust(60, b"\x00")
+                        response = build_response(0x00, ver_data[offset:offset+count])
+                        os.write(master_fd, response)
+                    elif table == 0x07:  # OUTPC realtime data
+                        outpc = build_outpc(state, fields, block_size)
+                        response = build_response(0x01, outpc[offset:offset+count])
+                        os.write(master_fd, response)
+                    elif table in (0x04, 0x05, 0x06, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D):  # Configuration pages
+                        # Return zeros for configuration data (we're a simulator, not storing real tune)
+                        # These are flash pages that TunerStudio tries to read on connect
+                        page_data = bytes(count)
+                        response = build_response(0x00, page_data)
+                        os.write(master_fd, response)
+                        if request_count <= 20:
+                            print(f"  [r] Table 0x{table:02X} Page data ({count} bytes) -> zeros")
+                    else:
+                        # Unknown table - return zeros anyway to avoid errors
+                        page_data = bytes(count)
+                        response = build_response(0x00, page_data)
+                        os.write(master_fd, response)
+                        print(f"  [r] Unknown table 0x{table:02X} ({count} bytes) -> zeros")
 
                 else:
                     # Unknown command - send error
@@ -546,7 +652,6 @@ def run_simulator(ini_path: Path, link_path: str, update_hz: float = 50):
 
             # Small sleep to prevent CPU spin
             time.sleep(1.0 / update_hz)
-
     except KeyboardInterrupt:
         print("\n\nShutting down simulator...")
     finally:

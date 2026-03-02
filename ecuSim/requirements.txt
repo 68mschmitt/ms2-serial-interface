@@ -1,0 +1,21 @@
+# Python dependencies for MS2Extra ECU Simulator
+# No external dependencies required - uses only Python standard library
+
+# The simulator uses these standard library modules:
+# - argparse: Command line argument parsing
+# - binascii: CRC32 calculation
+# - dataclasses: Data structures
+# - os: File operations, PTY handling
+# - pathlib: Path operations
+# - pty: Pseudo-terminal creation
+# - re: Regular expressions for INI parsing
+# - select: I/O multiplexing
+# - struct: Binary data packing/unpacking
+# - sys: System operations
+# - termios: Terminal configuration
+# - time: Timing functions
+# - xml.etree.ElementTree: MSQ XML parsing
+
+# Optional dependencies for development:
+# pytest  # For running tests
+# mypy    # For type checking
